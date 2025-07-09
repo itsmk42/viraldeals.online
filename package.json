@@ -1,0 +1,32 @@
+{
+  "name": "viraldeals-online",
+  "version": "1.0.0",
+  "description": "ViralDeals.online - E-commerce platform for viral and trending products",
+  "main": "backend/server.js",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "start": "cd backend && npm start",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
+    "install-all": "npm install --prefix backend && npm install --prefix frontend",
+    "test": "cd backend && npm test && cd ../frontend && npm test"
+  },
+  "keywords": [
+    "ecommerce",
+    "viral",
+    "trending",
+    "products",
+    "mern",
+    "react",
+    "nodejs",
+    "mongodb"
+  ],
+  "author": "itsmk42",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/itsmk42/viraldeals.online.git"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
