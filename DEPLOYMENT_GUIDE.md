@@ -27,14 +27,14 @@
    - Click "New Project"
    - Import your GitHub repository: `itsmk42/viraldeals.online`
 
-   **Note**: The project uses a modern Vercel configuration with automatic function detection and proper routing for the MERN stack architecture.
+   **Note**: The project uses Vercel's serverless functions architecture with the API in the `/api` directory following Vercel conventions.
 
 2. **Configure Build Settings**
    - Framework Preset: Other
    - Root Directory: Leave empty (uses root)
-   - Build Command: `npm run build`
+   - Build Command: `npm run vercel-build`
    - Output Directory: `frontend/dist`
-   - Install Command: `npm install --prefix backend && npm install --prefix frontend`
+   - Install Command: `npm install --prefix api && npm install --prefix backend && npm install --prefix frontend`
 
 3. **Environment Variables**
    Add these environment variables in Vercel dashboard:

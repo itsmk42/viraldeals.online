@@ -7,8 +7,9 @@
     "build": "cd frontend && npm install && npm run build",
     "start": "cd backend && npm start",
     "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
-    "install-all": "npm install --prefix backend && npm install --prefix frontend",
-    "test": "cd backend && npm test && cd ../frontend && npm test"
+    "install-all": "npm install --prefix api && npm install --prefix backend && npm install --prefix frontend",
+    "test": "cd backend && npm test && cd ../frontend && npm test",
+    "vercel-build": "npm install --prefix api && cd frontend && npm install && npm run build"
   },
   "keywords": [
     "ecommerce",
