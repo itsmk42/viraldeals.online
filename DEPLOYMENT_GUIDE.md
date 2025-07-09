@@ -32,9 +32,11 @@
 2. **Configure Build Settings**
    - Framework Preset: Other
    - Root Directory: Leave empty (uses root)
-   - Build Command: `npm run vercel-build`
-   - Output Directory: `frontend/dist`
-   - Install Command: `npm install --prefix api && npm install --prefix backend && npm install --prefix frontend`
+   - Build Command: Leave empty (uses vercel.json configuration)
+   - Output Directory: Leave empty (uses vercel.json configuration)
+   - Install Command: Leave empty (uses vercel.json configuration)
+
+   **Note**: All build settings are now configured in `vercel.json` for consistency.
 
 3. **Environment Variables**
    Add these environment variables in Vercel dashboard:
@@ -87,6 +89,11 @@
    - Check build logs in Vercel dashboard
    - Ensure all dependencies are properly listed in package.json
    - Verify environment variables are set correctly
+
+2. **"No Output Directory named 'public' found" Error**
+   - This is fixed by the `outputDirectory` setting in vercel.json
+   - Vercel now looks for built files in `frontend/dist` instead of `public`
+   - The build process creates files in the correct location
 
 2. **Database Connection Issues**
    - Verify MongoDB Atlas connection string
