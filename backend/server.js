@@ -89,6 +89,7 @@ import orderRoutes from './routes/orders.js';
 import paymentRoutes from './routes/payments.js';
 import adminRoutes from './routes/admin.js';
 import uploadRoutes from './routes/upload.js';
+import scraperRoutes from './routes/scraper.js';
 
 // Serve static files
 app.use('/uploads', express.static('uploads'));
@@ -100,6 +101,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/scraper', scraperRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

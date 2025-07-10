@@ -9,7 +9,7 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon
 } from '@heroicons/react/24/outline';
-import { useProducts } from '../../hooks/useProducts';
+import { useProducts, productKeys } from '../../hooks/useProducts';
 import { useQueryClient } from '@tanstack/react-query';
 import { productsAPI, adminAPI } from '../../services/api';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -74,8 +74,11 @@ const Products = () => {
       await adminAPI.deleteProduct(productId);
       toast.success('Product deleted successfully');
 
-      // Invalidate queries to refresh the list
-      queryClient.invalidateQueries(['products']);
+      // Invalidate all product-related queries to refresh the list
+      queryClient.invalidateQueries(productKeys.all);
+      queryClient.invalidateQueries(productKeys.lists());
+      queryClient.invalidateQueries(productKeys.featured());
+      queryClient.invalidateQueries(productKeys.categories());
     } catch (error) {
       console.error('Delete product error:', error);
       toast.error(error.response?.data?.message || 'Failed to delete product');

@@ -281,12 +281,18 @@ const Dashboard = () => {
           <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
         </div>
         <div className="p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <Link
               to="/admin/products/new"
               className="bg-primary-600 text-white text-center py-3 px-4 rounded-lg hover:bg-primary-700 transition-colors"
             >
               Add New Product
+            </Link>
+            <Link
+              to="/admin/scraper"
+              className="bg-blue-600 text-white text-center py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Scrape Products
             </Link>
             <Link
               to="/admin/orders?status=Processing"

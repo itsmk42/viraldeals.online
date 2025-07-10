@@ -10,7 +10,8 @@ import {
   ArrowLeftOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext';
 
@@ -23,6 +24,7 @@ const AdminLayout = () => {
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: HomeIcon, current: location.pathname === '/admin' },
     { name: 'Products', href: '/admin/products', icon: ShoppingBagIcon, current: location.pathname === '/admin/products' },
+    { name: 'Product Scraper', href: '/admin/scraper', icon: MagnifyingGlassIcon, current: location.pathname === '/admin/scraper' },
     { name: 'Orders', href: '/admin/orders', icon: ClipboardDocumentListIcon, current: location.pathname === '/admin/orders' },
     { name: 'Inventory', href: '/admin/inventory', icon: ExclamationTriangleIcon, current: location.pathname === '/admin/inventory' },
     { name: 'Users', href: '/admin/users', icon: UsersIcon, current: location.pathname === '/admin/users' },

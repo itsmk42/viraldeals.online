@@ -36,6 +36,7 @@ import AdminUsers from './pages/admin/Users';
 import AdminInventory from './pages/admin/Inventory';
 import AdminAnalytics from './pages/admin/Analytics';
 import ProductForm from './components/admin/ProductForm';
+import ProductScraper from './components/admin/ProductScraper';
 
 // Protected Route Component
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -91,6 +92,7 @@ function App() {
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="products/new" element={<ProductForm mode="create" />} />
                 <Route path="products/:id/edit" element={<ProductForm mode="edit" />} />
+                <Route path="scraper" element={<ProductScraper />} />
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="inventory" element={<AdminInventory />} />
                 <Route path="analytics" element={<AdminAnalytics />} />

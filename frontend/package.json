@@ -28,6 +28,7 @@
     "react-image-webp": "^0.8.0",
     "react-intersection-observer": "^9.16.0",
     "react-router-dom": "^7.6.3",
+    "viraldeals-online": "file:..",
     "yup": "^1.6.1"
   },
   "devDependencies": {

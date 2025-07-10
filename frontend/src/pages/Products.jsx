@@ -76,7 +76,7 @@ const Products = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
           <div>
@@ -138,7 +138,7 @@ const Products = () => {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Filters Sidebar */}
           <ProductFilters
             categories={categories}
@@ -150,7 +150,7 @@ const Products = () => {
           />
 
           {/* Products Grid/List */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             {products.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-gray-400 mb-4">

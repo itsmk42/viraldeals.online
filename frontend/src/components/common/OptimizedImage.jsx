@@ -31,10 +31,19 @@ const OptimizedImage = ({
 
   useEffect(() => {
     const checkWebPSupport = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1;
-      canvas.height = 1;
-      return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+      // Return false in test environment or if canvas is not available
+      if (typeof window === 'undefined' || typeof document === 'undefined') {
+        return false;
+      }
+
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+      } catch (error) {
+        return false;
+      }
     };
 
     setSupportsWebP(checkWebPSupport());
@@ -110,9 +119,9 @@ const OptimizedImage = ({
   };
 
   return (
-    <div 
+    <div
       ref={ref}
-      className={`relative overflow-hidden ${className}`}
+      className={`relative overflow-hidden bg-gray-50 flex items-center justify-center ${className}`}
       style={{ width, height }}
     >
       {/* Loading placeholder */}
@@ -121,7 +130,7 @@ const OptimizedImage = ({
           <div className="w-8 h-8 border-2 border-gray-300 border-t-primary-600 rounded-full animate-spin"></div>
         </div>
       )}
-      
+
       {/* Main image */}
       <img
         ref={imgRef}
@@ -131,9 +140,9 @@ const OptimizedImage = ({
         height={height}
         sizes={sizes}
         srcSet={generateSrcSet(src)}
-        className={`transition-opacity duration-300 ${
+        className={`w-full h-full object-contain object-center transition-opacity duration-300 ${
           isLoaded ? 'opacity-100' : 'opacity-0'
-        } ${className}`}
+        }`}
         onLoad={handleImageLoad}
         onError={handleImageError}
         loading={priority ? 'eager' : 'lazy'}
@@ -191,7 +200,7 @@ export const ImageGallery = ({ images = [], alt = '', className = '' }) => {
       <OptimizedImage
         src={images[selectedIndex]?.url}
         alt={`${alt} ${selectedIndex + 1}`}
-        className={`w-full h-96 object-cover rounded-lg ${className}`}
+        className={`w-full h-96 rounded-lg ${className}`}
         priority={selectedIndex === 0}
         width={600}
         height={400}
@@ -211,7 +220,7 @@ export const ImageGallery = ({ images = [], alt = '', className = '' }) => {
               <OptimizedImage
                 src={image.url}
                 alt={`${alt} thumbnail ${index + 1}`}
-                className="w-full h-full object-cover"
+                className="w-full h-full"
                 width={80}
                 height={80}
               />

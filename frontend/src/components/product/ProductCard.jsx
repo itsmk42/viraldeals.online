@@ -43,12 +43,12 @@ const ProductCard = ({ product, viewMode = 'grid', priority = false, lazy = true
 
   if (viewMode === 'list') {
     return (
-      <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200">
+      <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden">
         <div className="flex p-6">
-          <Link to={`/products/${product._id}`} className="flex-shrink-0">
+          <Link to={`/products/${product._id}`} className="flex-shrink-0 w-32 h-32 overflow-hidden rounded-lg">
             <ProductImage
               product={product}
-              className="w-32 h-32 object-cover rounded-lg"
+              className="w-full h-full"
               priority={priority}
               width={128}
               height={128}
@@ -127,15 +127,15 @@ const ProductCard = ({ product, viewMode = 'grid', priority = false, lazy = true
 
   // Grid view
   return (
-    <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 group">
-      <div className="relative">
-        <Link to={`/products/${product._id}`}>
+    <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 group flex flex-col h-full overflow-hidden">
+      <div className="relative flex-shrink-0 w-full h-48 sm:h-52 overflow-hidden rounded-t-lg">
+        <Link to={`/products/${product._id}`} className="block w-full h-full">
           <ProductImage
             product={product}
-            className="w-full h-48 object-cover rounded-t-lg group-hover:opacity-90 transition-opacity"
+            className="w-full h-full group-hover:opacity-90 transition-opacity"
             priority={priority}
             width={300}
-            height={192}
+            height={208}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
         </Link>
@@ -159,22 +159,22 @@ const ProductCard = ({ product, viewMode = 'grid', priority = false, lazy = true
           </div>
         )}
       </div>
-      
-      <div className="p-4">
+
+      <div className="p-4 flex flex-col flex-grow">
         <Link to={`/products/${product._id}`}>
-          <h3 className="text-lg font-semibold text-gray-900 hover:text-primary-600 transition-colors mb-2 line-clamp-2">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 hover:text-primary-600 transition-colors mb-2 line-clamp-2 min-h-[3rem]">
             {product.name}
           </h3>
         </Link>
-        
+
         {product.brand && (
           <p className="text-sm text-gray-500 mb-2">by {product.brand}</p>
         )}
-        
-        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+
+        <p className="text-gray-600 text-sm mb-3 line-clamp-2 flex-grow">
           {product.shortDescription || product.description}
         </p>
-        
+
         {/* Rating */}
         {product.rating?.average > 0 && (
           <div className="flex items-center space-x-1 mb-3">
@@ -186,11 +186,11 @@ const ProductCard = ({ product, viewMode = 'grid', priority = false, lazy = true
             </span>
           </div>
         )}
-        
+
         {/* Price */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col space-y-1 mb-4 mt-auto">
           <div className="flex items-center space-x-2">
-            <span className="text-xl font-bold text-gray-900">
+            <span className="text-lg sm:text-xl font-bold text-gray-900">
               {formatPrice(product.price)}
             </span>
             {product.originalPrice && product.originalPrice > product.price && (
@@ -199,15 +199,20 @@ const ProductCard = ({ product, viewMode = 'grid', priority = false, lazy = true
               </span>
             )}
           </div>
+          {product.discount > 0 && (
+            <span className="text-sm text-green-600 font-medium">
+              Save {product.discount}%
+            </span>
+          )}
         </div>
-        
+
         {/* Add to Cart Button */}
         <button
           onClick={handleAddToCart}
           disabled={product.stock === 0}
-          className="w-full bg-primary-600 text-white py-2 rounded-lg hover:bg-primary-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          className="w-full bg-primary-600 text-white py-2.5 rounded-lg hover:bg-primary-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed font-medium text-sm"
         >
-          {product.stock === 0 ? 'Out of Stock' : 
+          {product.stock === 0 ? 'Out of Stock' :
            isInCart(product._id) ? `In Cart (${getItemQuantity(product._id)})` : 'Add to Cart'}
         </button>
       </div>

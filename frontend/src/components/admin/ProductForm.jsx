@@ -9,7 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useQueryClient } from '@tanstack/react-query';
 import { productsAPI, adminAPI } from '../../services/api';
-import { useCategories } from '../../hooks/useProducts';
+import { useCategories, productKeys } from '../../hooks/useProducts';
 import { uploadService } from '../../services/uploadAPI';
 import toast from 'react-hot-toast';
 
@@ -305,8 +305,13 @@ const ProductForm = ({ mode = 'create' }) => {
       }
 
       // Invalidate relevant queries
-      queryClient.invalidateQueries(['products']);
-      queryClient.invalidateQueries(['product', id]);
+      queryClient.invalidateQueries(productKeys.all);
+      queryClient.invalidateQueries(productKeys.lists());
+      queryClient.invalidateQueries(productKeys.featured());
+      queryClient.invalidateQueries(productKeys.categories());
+      if (id) {
+        queryClient.invalidateQueries(productKeys.detail(id));
+      }
 
       navigate('/admin/products');
     } catch (error) {

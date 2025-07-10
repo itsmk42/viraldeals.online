@@ -49,7 +49,7 @@ const LazyProductGrid = ({
   }, [inView, loading, loadMoreProducts]);
 
   const gridClasses = viewMode === 'grid'
-    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 auto-rows-fr'
     : 'space-y-4';
 
   return (
@@ -107,38 +107,38 @@ const LazyProductGrid = ({
 // Skeleton loader for products
 export const ProductGridSkeleton = ({ count = 12, viewMode = 'grid' }) => {
   const gridClasses = viewMode === 'grid'
-    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 auto-rows-fr'
     : 'space-y-4';
 
   return (
     <div className={gridClasses}>
       {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full">
           {/* Image skeleton */}
-          <div className="w-full h-48 bg-gray-200 animate-pulse"></div>
-          
+          <div className="w-full h-48 sm:h-52 bg-gray-200 animate-pulse flex-shrink-0 overflow-hidden rounded-t-lg"></div>
+
           {/* Content skeleton */}
-          <div className="p-4 space-y-3">
+          <div className="p-4 space-y-3 flex flex-col flex-grow">
             {/* Title */}
-            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
-            
+            <div className="space-y-2">
+              <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2 flex-grow">
+              <div className="h-3 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-3 bg-gray-200 rounded w-5/6 animate-pulse"></div>
+            </div>
+
             {/* Price */}
-            <div className="flex items-center space-x-2">
-              <div className="h-5 bg-gray-200 rounded w-20 animate-pulse"></div>
+            <div className="flex items-center space-x-2 mt-auto">
+              <div className="h-6 bg-gray-200 rounded w-20 animate-pulse"></div>
               <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
             </div>
-            
-            {/* Rating */}
-            <div className="flex items-center space-x-1">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
-              ))}
-              <div className="h-4 bg-gray-200 rounded w-12 animate-pulse ml-2"></div>
-            </div>
-            
+
             {/* Button */}
-            <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 bg-gray-200 rounded animate-pulse mt-2"></div>
           </div>
         </div>
       ))}
