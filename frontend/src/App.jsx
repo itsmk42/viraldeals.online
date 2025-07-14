@@ -35,6 +35,7 @@ import AdminOrders from './pages/admin/Orders';
 import AdminUsers from './pages/admin/Users';
 import AdminInventory from './pages/admin/Inventory';
 import AdminAnalytics from './pages/admin/Analytics';
+import AdminSettings from './pages/admin/Settings';
 import ProductForm from './components/admin/ProductForm';
 import ProductScraper from './components/admin/ProductScraper';
 
@@ -97,6 +98,7 @@ function App() {
                 <Route path="inventory" element={<AdminInventory />} />
                 <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="users" element={<AdminUsers />} />
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
             </Routes>
 

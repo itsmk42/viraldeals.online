@@ -5,7 +5,9 @@ import {
   getAllOrders,
   updateOrderStatus,
   getAnalytics,
-  exportAnalytics
+  exportAnalytics,
+  getSettings,
+  updateSettings
 } from '../controllers/adminController.js';
 import { protect, authorize } from '../middleware/auth.js';
 import {
@@ -34,5 +36,9 @@ router.put('/orders/:id/status', invalidateOrderCache, updateOrderStatus);
 // Analytics
 router.get('/analytics', compressionMiddleware, getAnalytics);
 router.get('/analytics/export', exportAnalytics);
+
+// Settings
+router.get('/settings', compressionMiddleware, getSettings);
+router.put('/settings', updateSettings);
 
 export default router;

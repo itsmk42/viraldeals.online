@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import Product from '../models/Product.js';
 import Order from '../models/Order.js';
+import Settings from '../models/Settings.js';
 
 // @desc    Get admin dashboard stats
 // @route   GET /api/admin/dashboard
@@ -443,6 +444,84 @@ export const exportAnalytics = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to export analytics data'
+    });
+  }
+};
+
+// @desc    Get application settings
+// @route   GET /api/admin/settings
+// @access  Private/Admin
+export const getSettings = async (req, res) => {
+  try {
+    const settings = await Settings.getSettings();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        settings: {
+          general: settings.general,
+          business: settings.business,
+          shipping: settings.shipping,
+          notifications: settings.notifications,
+          security: settings.security
+        },
+        lastUpdated: settings.updatedAt,
+        version: settings.version
+      }
+    });
+  } catch (error) {
+    console.error('Get settings error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching settings'
+    });
+  }
+};
+
+// @desc    Update application settings
+// @route   PUT /api/admin/settings
+// @access  Private/Admin
+export const updateSettings = async (req, res) => {
+  try {
+    const { general, business, shipping, notifications, security } = req.body;
+
+    // Validate required fields
+    if (!general && !business && !shipping && !notifications && !security) {
+      return res.status(400).json({
+        success: false,
+        message: 'At least one settings section must be provided'
+      });
+    }
+
+    const updateData = {};
+    if (general) updateData.general = general;
+    if (business) updateData.business = business;
+    if (shipping) updateData.shipping = shipping;
+    if (notifications) updateData.notifications = notifications;
+    if (security) updateData.security = security;
+
+    const settings = await Settings.updateSettings(updateData, req.user.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Settings updated successfully',
+      data: {
+        settings: {
+          general: settings.general,
+          business: settings.business,
+          shipping: settings.shipping,
+          notifications: settings.notifications,
+          security: settings.security
+        },
+        lastUpdated: settings.updatedAt,
+        version: settings.version
+      }
+    });
+  } catch (error) {
+    console.error('Update settings error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating settings'
     });
   }
 };

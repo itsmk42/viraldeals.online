@@ -107,6 +107,10 @@ export const adminAPI = {
     return api.get(`/admin/users?${queryString}`);
   },
   updateUser: (id, userData) => api.put(`/admin/users/${id}`, userData),
+
+  // Settings
+  getSettings: () => api.get('/admin/settings'),
+  updateSettings: (settingsData) => api.put('/admin/settings', settingsData),
 };
 
 export default api;
