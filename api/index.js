@@ -14,6 +14,7 @@ import paymentRoutes from '../backend/routes/payments.js';
 import adminRoutes from '../backend/routes/admin.js';
 import uploadRoutes from '../backend/routes/upload.js';
 import scraperRoutes from '../backend/routes/scraper.js';
+import analyticsRoutes from '../backend/routes/analytics.js';
 
 // Load environment variables
 dotenv.config();
@@ -107,6 +108,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/scraper', scraperRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Serve static files (uploads)
 app.use('/uploads', express.static(path.join(__dirname, '../backend/uploads')));
