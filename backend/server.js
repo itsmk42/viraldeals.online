@@ -7,6 +7,16 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cacheService from './utils/cache.js';
 
+// Import routes
+import authRoutes from './routes/auth.js';
+import productRoutes from './routes/products.js';
+import orderRoutes from './routes/orders.js';
+import paymentRoutes from './routes/payments.js';
+import adminRoutes from './routes/admin.js';
+import uploadRoutes from './routes/upload.js';
+import scraperRoutes from './routes/scraper.js';
+import analyticsRoutes from './routes/analytics.js';
+
 // Load environment variables
 dotenv.config();
 
@@ -82,18 +92,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Import routes
-import authRoutes from './routes/auth.js';
-import productRoutes from './routes/products.js';
-import orderRoutes from './routes/orders.js';
-import paymentRoutes from './routes/payments.js';
-import adminRoutes from './routes/admin.js';
-import uploadRoutes from './routes/upload.js';
-import scraperRoutes from './routes/scraper.js';
-
-// Serve static files
-app.use('/uploads', express.static('uploads'));
-
 // Use routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -102,6 +100,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/scraper', scraperRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
