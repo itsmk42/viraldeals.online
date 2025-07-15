@@ -44,7 +44,7 @@ const connectDB = async () => {
         return cached.conn;
       }
       console.log('Cached connection exists but not in connected state, reconnecting...');
-      await cached.conn.close();
+      await mongoose.disconnect();
       cached.conn = null;
       cached.promise = null;
     }
@@ -84,10 +84,10 @@ const connectDB = async () => {
     // Create new connection promise
     cached.promise = mongoose
       .connect(uri.toString(), opts)
-      .then((conn) => {
+      .then((mongoose) => {
         console.log('New MongoDB connection established');
-        cached.conn = conn;
-        return conn;
+        cached.conn = mongoose.connection;
+        return mongoose.connection;
       })
       .catch((error) => {
         console.error('MongoDB connection error:', {
@@ -130,10 +130,8 @@ const ensureDbConnected = async (req, res, next) => {
 ['SIGTERM', 'SIGINT'].forEach(signal => {
   process.on(signal, async () => {
     try {
-      if (cached.conn) {
-        await cached.conn.close();
-        console.log('MongoDB disconnected through app termination');
-      }
+      await mongoose.disconnect();
+      console.log('MongoDB disconnected through app termination');
       process.exit(0);
     } catch (err) {
       console.error('Error during database disconnection:', err);
