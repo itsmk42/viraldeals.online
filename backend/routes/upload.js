@@ -10,8 +10,15 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
+// Determine if we're in production (Lambda) environment
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Set uploads directory based on environment
+const uploadsDir = isProduction 
+  ? path.join('/tmp', 'uploads')
+  : path.join(__dirname, '../uploads');
+
 // Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
