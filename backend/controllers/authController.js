@@ -138,48 +138,88 @@ export const createAdmin = async (req, res) => {
   try {
     const { adminSecret, name, email, password, phone } = req.body;
 
+    console.log('Create admin request:', { adminSecret: adminSecret ? 'provided' : 'missing', name, email, phone });
+
     // Check admin secret (for security)
     const expectedSecret = process.env.ADMIN_SETUP_SECRET || 'viraldeals-admin-setup-2025';
     if (adminSecret !== expectedSecret) {
+      console.log('Admin secret mismatch. Expected:', expectedSecret, 'Received:', adminSecret);
       return res.status(403).json({
         success: false,
-        message: 'Invalid admin setup secret'
+        message: 'Invalid admin setup secret',
+        debug: process.env.NODE_ENV === 'development' ? { expected: expectedSecret, received: adminSecret } : undefined
       });
     }
 
+    // Validate required fields
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and password are required'
+      });
+    }
+
+    // Set default values for admin user
+    const adminData = {
+      name: name || 'Sanjay Admin',
+      email: email,
+      password: password,
+      phone: phone || '9123456789',
+      role: 'admin',
+      isEmailVerified: true,
+      isPhoneVerified: true
+    };
+
     // Check if admin with this email already exists
-    const existingAdmin = await User.findOne({ email });
+    const existingAdmin = await User.findOne({ email: adminData.email });
     if (existingAdmin) {
+      console.log('Updating existing admin user:', existingAdmin.email);
       // Update existing admin user
-      existingAdmin.password = password; // Will be hashed by pre-save middleware
-      existingAdmin.name = name || existingAdmin.name;
+      existingAdmin.password = adminData.password; // Will be hashed by pre-save middleware
+      existingAdmin.name = adminData.name;
       existingAdmin.role = 'admin';
       existingAdmin.isEmailVerified = true;
       existingAdmin.isPhoneVerified = true;
 
       await existingAdmin.save();
+      console.log('Admin user updated successfully');
       return sendTokenResponse(existingAdmin, 200, res, 'Admin user updated successfully');
     }
 
-
+    console.log('Creating new admin user with data:', { ...adminData, password: '[HIDDEN]' });
 
     // Create admin user
-    const adminUser = await User.create({
-      name: name || 'Admin User',
-      email: email || 'admin@viraldeals.online',
-      password: password || 'Admin123!',
-      phone: phone || '9876543210',
-      role: 'admin',
-      isEmailVerified: true,
-      isPhoneVerified: true
-    });
+    const adminUser = await User.create(adminData);
 
+    console.log('Admin user created successfully:', adminUser.email);
     sendTokenResponse(adminUser, 201, res, 'Admin user created successfully');
   } catch (error) {
     console.error('Create admin error:', error);
+
+    // Handle validation errors specifically
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: validationErrors,
+        debug: process.env.NODE_ENV === 'development' ? error.errors : undefined
+      });
+    }
+
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email or phone already exists',
+        debug: process.env.NODE_ENV === 'development' ? error.keyValue : undefined
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: 'Server error during admin creation'
+      message: 'Server error during admin creation',
+      debug: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

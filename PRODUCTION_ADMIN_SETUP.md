@@ -20,7 +20,25 @@ curl -X POST https://viraldeals-online-3uwb.vercel.app/api/auth/create-admin \
     "email": "sanjay@admin.com",
     "password": "Ss@1234q",
     "phone": "9123456789"
-  }'
+  }' \
+  -v
+```
+
+### **Alternative Email (if validation fails)**
+
+If the above fails due to email validation, try with a standard email format:
+
+```bash
+curl -X POST https://viraldeals-online-3uwb.vercel.app/api/auth/create-admin \
+  -H "Content-Type: application/json" \
+  -d '{
+    "adminSecret": "viraldeals-admin-setup-2025",
+    "name": "Sanjay Admin",
+    "email": "sanjay.admin@viraldeals.com",
+    "password": "Ss@1234q",
+    "phone": "9123456789"
+  }' \
+  -v
 ```
 
 ### **Method 2: Direct MongoDB Atlas**
