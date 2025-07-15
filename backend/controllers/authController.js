@@ -147,23 +147,21 @@ export const createAdmin = async (req, res) => {
       });
     }
 
-    // Check if admin already exists
-    const existingAdmin = await User.findOne({ role: 'admin' });
+    // Check if admin with this email already exists
+    const existingAdmin = await User.findOne({ email });
     if (existingAdmin) {
-      return res.status(400).json({
-        success: false,
-        message: 'Admin user already exists'
-      });
+      // Update existing admin user
+      existingAdmin.password = password; // Will be hashed by pre-save middleware
+      existingAdmin.name = name || existingAdmin.name;
+      existingAdmin.role = 'admin';
+      existingAdmin.isEmailVerified = true;
+      existingAdmin.isPhoneVerified = true;
+
+      await existingAdmin.save();
+      return sendTokenResponse(existingAdmin, 200, res, 'Admin user updated successfully');
     }
 
-    // Check if user with email exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: 'User with this email already exists'
-      });
-    }
+
 
     // Create admin user
     const adminUser = await User.create({
