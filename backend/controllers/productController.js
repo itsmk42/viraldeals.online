@@ -138,7 +138,8 @@ export const getFeaturedProducts = async (req, res) => {
       .limit(limit)
       .select('name price originalPrice images rating stock category brand discount seo')
       .lean()
-      .maxTimeMS(5000); // Set 5 second timeout
+      .maxTimeMS(5000) // Set 5 second timeout
+      .exec(); // Explicitly execute the query
 
     if (!products) {
       throw new Error('Failed to fetch featured products');
@@ -186,7 +187,7 @@ export const getCategories = async (req, res) => {
         }
       },
       { $sort: { name: 1 } }
-    ]).maxTimeMS(5000); // Set maximum execution time to 5 seconds
+    ]).option({ maxTimeMS: 5000 }); // Correct syntax for setting timeout
 
     if (!categoriesWithCount) {
       throw new Error('Failed to fetch categories');
@@ -198,11 +199,15 @@ export const getCategories = async (req, res) => {
     });
   } catch (error) {
     console.error('Get categories error:', error);
-    // Send a more specific error message
+    
+    // Send more specific error message based on error type
+    const errorMessage = error.name === 'MongoServerError' && error.code === 50 
+      ? 'Request timed out while fetching categories. Please try again.'
+      : 'Server error while fetching categories';
+    
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch categories. Please try again.',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: errorMessage
     });
   }
 };
