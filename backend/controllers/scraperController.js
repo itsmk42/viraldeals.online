@@ -2,6 +2,19 @@ import DeodapScraper from '../services/webScraper.js';
 import Product from '../models/Product.js';
 import { validationResult } from 'express-validator';
 import winston from 'winston';
+import path from 'path';
+import fs from 'fs';
+
+// Determine if we're in production (Lambda) environment
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Set logs directory based on environment
+const logsDir = isProduction ? '/tmp/logs' : 'logs';
+
+// Create logs directory if it doesn't exist
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
 
 // Configure logger
 const logger = winston.createLogger({
@@ -12,7 +25,7 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
   transports: [
-    new winston.transports.File({ filename: 'logs/scraper-controller.log' }),
+    new winston.transports.File({ filename: path.join(logsDir, 'scraper-controller.log') }),
     new winston.transports.Console({
       format: winston.format.simple()
     })
