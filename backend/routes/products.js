@@ -20,14 +20,15 @@ import {
   featuredProductsCacheMiddleware,
   categoriesCacheMiddleware,
   invalidateProductCache,
-  compressionMiddleware
+  compressionMiddleware,
+  cache
 } from '../middleware/cache.js';
 
 const router = express.Router();
 
 // Public routes with caching
 router.get('/', compressionMiddleware, productsCacheMiddleware, getProducts);
-router.get('/featured', compressionMiddleware, featuredProductsCacheMiddleware, getFeaturedProducts);
+router.get('/featured', compressionMiddleware, cache('1h'), getFeaturedProducts);
 router.get('/categories', compressionMiddleware, categoriesCacheMiddleware, getCategories);
 router.get('/:id', optionalAuth, compressionMiddleware, productCacheMiddleware, getProduct);
 router.get('/:id/reviews', compressionMiddleware, getReviews);

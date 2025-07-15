@@ -137,7 +137,12 @@ export const getFeaturedProducts = async (req, res) => {
       .sort({ 'rating.average': -1, createdAt: -1 })
       .limit(limit)
       .select('name price originalPrice images rating stock category brand discount seo')
-      .lean();
+      .lean()
+      .maxTimeMS(5000); // Set 5 second timeout
+
+    if (!products) {
+      throw new Error('Failed to fetch featured products');
+    }
 
     res.status(200).json({
       success: true,
@@ -146,9 +151,15 @@ export const getFeaturedProducts = async (req, res) => {
     });
   } catch (error) {
     console.error('Get featured products error:', error);
+    
+    // Send more specific error message based on error type
+    const errorMessage = error.name === 'MongooseError' && error.message.includes('timed out')
+      ? 'Request timed out while fetching featured products. Please try again.'
+      : 'Server error while fetching featured products';
+    
     res.status(500).json({
       success: false,
-      message: 'Server error while fetching featured products'
+      message: errorMessage
     });
   }
 };
@@ -158,18 +169,28 @@ export const getFeaturedProducts = async (req, res) => {
 // @access  Public
 export const getCategories = async (req, res) => {
   try {
-    const categories = await Product.distinct('category', { isActive: true });
-    
-    // Get product count for each category
-    const categoriesWithCount = await Promise.all(
-      categories.map(async (category) => {
-        const count = await Product.countDocuments({ 
-          category, 
-          isActive: true 
-        });
-        return { name: category, count };
-      })
-    );
+    // Use aggregation to get categories and counts in a single query
+    const categoriesWithCount = await Product.aggregate([
+      { $match: { isActive: true } },
+      {
+        $group: {
+          _id: '$category',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          name: '$_id',
+          count: 1
+        }
+      },
+      { $sort: { name: 1 } }
+    ]).maxTimeMS(5000); // Set maximum execution time to 5 seconds
+
+    if (!categoriesWithCount) {
+      throw new Error('Failed to fetch categories');
+    }
 
     res.status(200).json({
       success: true,
@@ -177,9 +198,11 @@ export const getCategories = async (req, res) => {
     });
   } catch (error) {
     console.error('Get categories error:', error);
+    // Send a more specific error message
     res.status(500).json({
       success: false,
-      message: 'Server error while fetching categories'
+      message: 'Failed to fetch categories. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

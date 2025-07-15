@@ -58,8 +58,8 @@ export const productCacheMiddleware = cacheMiddleware(
 
 // Categories cache middleware
 export const categoriesCacheMiddleware = cacheMiddleware(
-  () => cacheService.generateKey('categories'),
-  7200 // 2 hours
+  () => cacheService.generateKey('categories', 'active'),
+  3600 // 1 hour instead of 2 hours since we've optimized the query
 );
 
 // Featured products cache middleware
