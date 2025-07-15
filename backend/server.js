@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import compression from 'compression';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import { ensureDbConnected } from './utils/db.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -35,26 +35,8 @@ app.use(cors());
 app.use(express.json());
 app.use(compression());
 
-// Connect to MongoDB with improved options
-mongoose.connect(process.env.MONGODB_URI, {
-  serverSelectionTimeoutMS: 5000, // Timeout for server selection
-  socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-  family: 4, // Use IPv4, skip trying IPv6
-  maxPoolSize: 10 // Maintain up to 10 socket connections
-})
-.then(() => {
-  console.log('Connected to MongoDB');
-  
-  // Only start server after successful DB connection
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-})
-.catch(err => {
-  console.error('MongoDB connection error:', err);
-  process.exit(1); // Exit if unable to connect to MongoDB
-});
+// Ensure DB connection before handling requests
+app.use(ensureDbConnected);
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -72,3 +54,15 @@ app.use((err, req, res, next) => {
     message: 'Something broke!'
   });
 });
+
+// Start server if not in Lambda environment
+if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  console.log('Running in Lambda environment');
+} else {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+export default app;

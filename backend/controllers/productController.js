@@ -138,12 +138,14 @@ export const getFeaturedProducts = async (req, res) => {
       .limit(limit)
       .select('name price originalPrice images rating stock category brand discount seo')
       .lean()
-      .maxTimeMS(5000) // Set 5 second timeout
       .exec(); // Explicitly execute the query
 
     if (!products) {
       throw new Error('Failed to fetch featured products');
     }
+
+    // Cache the response
+    res.setHeader('Cache-Control', 's-maxage=3600');
 
     res.status(200).json({
       success: true,
@@ -152,15 +154,9 @@ export const getFeaturedProducts = async (req, res) => {
     });
   } catch (error) {
     console.error('Get featured products error:', error);
-    
-    // Send more specific error message based on error type
-    const errorMessage = error.name === 'MongooseError' && error.message.includes('timed out')
-      ? 'Request timed out while fetching featured products. Please try again.'
-      : 'Server error while fetching featured products';
-    
     res.status(500).json({
       success: false,
-      message: errorMessage
+      message: 'Server error while fetching featured products'
     });
   }
 };
@@ -187,11 +183,14 @@ export const getCategories = async (req, res) => {
         }
       },
       { $sort: { name: 1 } }
-    ]).option({ maxTimeMS: 5000 }); // Correct syntax for setting timeout
+    ]).exec(); // Explicitly execute the query
 
     if (!categoriesWithCount) {
       throw new Error('Failed to fetch categories');
     }
+
+    // Cache the response
+    res.setHeader('Cache-Control', 's-maxage=3600');
 
     res.status(200).json({
       success: true,
@@ -199,15 +198,9 @@ export const getCategories = async (req, res) => {
     });
   } catch (error) {
     console.error('Get categories error:', error);
-    
-    // Send more specific error message based on error type
-    const errorMessage = error.name === 'MongoServerError' && error.code === 50 
-      ? 'Request timed out while fetching categories. Please try again.'
-      : 'Server error while fetching categories';
-    
     res.status(500).json({
       success: false,
-      message: errorMessage
+      message: 'Server error while fetching categories'
     });
   }
 };
