@@ -104,13 +104,7 @@ const Login = () => {
             </div>
           </form>
 
-          <div className="mt-6">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">
-                Demo credentials: admin@viraldeals.online / Admin123!
-              </p>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>

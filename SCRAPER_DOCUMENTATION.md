@@ -133,7 +133,7 @@ viraldeals/
 ### Admin Interface Usage
 
 1. **Access the Scraper**
-   - Login as admin: `admin@viraldeals.online` / `Admin123!`
+   - Login as admin with your admin credentials
    - Navigate to Admin → Product Scraper
    - Or use Quick Action from dashboard
 
@@ -155,7 +155,7 @@ viraldeals/
 # Get admin token
 TOKEN=$(curl -X POST "http://localhost:5001/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@viraldeals.online","password":"Admin123!"}' \
+  -d '{"email":"your-admin-email","password":"your-admin-password"}' \
   | jq -r '.token')
 
 # Scrape single product
