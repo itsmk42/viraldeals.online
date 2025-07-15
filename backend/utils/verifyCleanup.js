@@ -1,20 +1,5 @@
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+import { connectDB } from './db.js';
 import Product from '../models/Product.js';
-
-// Load environment variables
-dotenv.config();
-
-// Connect to database
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/viraldeals');
-    console.log('MongoDB Connected for verification');
-  } catch (error) {
-    console.error('Database connection error:', error);
-    process.exit(1);
-  }
-};
 
 // Verify cleanup and category update
 const verifyCleanup = async () => {
@@ -145,7 +130,7 @@ const verifyCleanup = async () => {
     
     process.exit(0);
   } catch (error) {
-    console.error('❌ Verification failed:', error);
+    console.error('Verification failed:', error);
     process.exit(1);
   }
 };

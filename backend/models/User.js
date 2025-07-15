@@ -89,6 +89,20 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Set timeout for all operations
+userSchema.set('maxTimeMS', 15000);
+
+// Handle timeouts gracefully
+userSchema.pre(['find', 'findOne'], function() {
+  this.maxTimeMS(15000);
+});
+
+// Add indexes for better performance
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ phone: 1 }, { unique: true });
+userSchema.index({ role: 1 });
+userSchema.index({ createdAt: -1 });
+
 // Hash password before saving
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) {

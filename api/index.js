@@ -16,6 +16,9 @@ import uploadRoutes from '../backend/routes/upload.js';
 import scraperRoutes from '../backend/routes/scraper.js';
 import analyticsRoutes from '../backend/routes/analytics.js';
 
+// Import database connection
+import { connectDB, ensureDbConnected } from '../backend/utils/db.js';
+
 // Load environment variables
 dotenv.config();
 
@@ -23,6 +26,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+// Trust proxy - required for rate limiting behind Vercel
+app.set('trust proxy', 1);
 
 // CORS configuration
 const corsOptions = {
@@ -35,61 +41,17 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Connect to MongoDB
-const connectDB = async () => {
-  try {
-    if (mongoose.connections[0].readyState) {
-      console.log('Using existing MongoDB connection');
-      return;
-    }
-
-    // Log the MongoDB URI (without sensitive data) for debugging
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/viraldeals';
-    console.log('Connecting to MongoDB:', mongoURI.replace(/:([^:@]{4,}@)/g, ':****@'));
-    
-    await mongoose.connect(mongoURI, {
-      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds
-    });
-    
-    console.log('MongoDB Connected Successfully');
-  } catch (error) {
-    console.error('MongoDB Connection Error Details:');
-    console.error('Error Name:', error.name);
-    console.error('Error Message:', error.message);
-    console.error('Error Code:', error.code);
-    if (error.reason) console.error('Error Reason:', error.reason);
-    
-    // Check if it's a connection string issue
-    if (error.message.includes('ENOTFOUND') || error.message.includes('Invalid connection string')) {
-      console.error('Invalid MongoDB connection string. Please check your MONGODB_URI environment variable.');
-    }
-    
-    throw error; // Re-throw to be handled by error middleware
-  }
-};
-
-// Initialize database connection with retry logic
-const initDB = async (retries = 3, delay = 5000) => {
-  for (let i = 0; i < retries; i++) {
-    try {
-      await connectDB();
-      return;
-    } catch (error) {
-      if (i === retries - 1) {
-        console.error('Failed to connect to MongoDB after', retries, 'attempts');
-        throw error;
-      }
-      console.log(`Retrying connection in ${delay/1000} seconds... (Attempt ${i + 1}/${retries})`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
-};
-
 // Initialize database connection
-initDB().catch(error => {
-  console.error('Database connection error:', error);
-});
+connectDB()
+  .then(() => {
+    console.log('Initial MongoDB connection successful');
+  })
+  .catch(error => {
+    console.error('Initial database connection error:', error);
+  });
+
+// Add connection check middleware
+app.use(ensureDbConnected);
 
 // Health check endpoint
 app.get('/api', (req, res) => {

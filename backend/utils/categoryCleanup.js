@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import { connectDB } from './db.js';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
 

@@ -8,93 +8,104 @@ const STATES = {
   disconnecting: 3,
 };
 
-// Cache the database connection
+// Cache the database connection globally
 let cached = global.mongoose;
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+  cached = global.mongoose = { 
+    conn: null, 
+    promise: null,
+    isConnecting: false,
+    lastConnectionAttempt: 0
+  };
 }
+
+// Minimum time between connection attempts (5 seconds)
+const MIN_INTERVAL = 5000;
 
 const connectDB = async () => {
   try {
-    console.log('Connection attempt started...');
-    console.log('Current connection state:', mongoose.connection.readyState);
-    
+    // Check if we're already connecting
+    if (cached.isConnecting) {
+      console.log('Connection attempt already in progress, waiting...');
+      return cached.promise;
+    }
+
+    // Check if we have a recent connection attempt
+    const now = Date.now();
+    if (now - cached.lastConnectionAttempt < MIN_INTERVAL) {
+      console.log('Too many connection attempts, waiting...');
+      return cached.promise || Promise.reject(new Error('Connection throttled'));
+    }
+
+    // Check existing connection
     if (cached.conn) {
       if (cached.conn.readyState === STATES.connected) {
-        console.log('Using cached MongoDB connection');
+        console.log('Using existing MongoDB connection');
         return cached.conn;
       }
       console.log('Cached connection exists but not in connected state, reconnecting...');
+      await cached.conn.close();
       cached.conn = null;
       cached.promise = null;
     }
 
     if (!process.env.MONGODB_URI) {
-      throw new Error('MONGODB_URI is not defined in environment variables');
+      throw new Error('MONGODB_URI is not defined');
     }
 
-    // Add additional connection parameters to URI if they don't exist
-    let uri = process.env.MONGODB_URI;
-    if (!uri.includes('retryWrites=')) {
-      uri += (uri.includes('?') ? '&' : '?') + 'retryWrites=true';
-    }
-    if (!uri.includes('w=')) {
-      uri += '&w=majority';
-    }
-    if (!uri.includes('connectTimeoutMS=')) {
-      uri += '&connectTimeoutMS=10000';
-    }
-    if (!uri.includes('socketTimeoutMS=')) {
-      uri += '&socketTimeoutMS=45000';
-    }
+    // Update connection attempt timestamp
+    cached.lastConnectionAttempt = now;
+    cached.isConnecting = true;
 
-    console.log('MongoDB URI format check:', uri.startsWith('mongodb+srv://') ? 'Valid srv format' : 'Invalid format');
+    // Parse and update connection string
+    const uri = new URL(process.env.MONGODB_URI);
+    uri.searchParams.set('retryWrites', 'true');
+    uri.searchParams.set('w', 'majority');
+    uri.searchParams.set('maxPoolSize', '10');
+    uri.searchParams.set('minPoolSize', '5');
+    uri.searchParams.set('maxIdleTimeMS', '60000');
+    uri.searchParams.set('connectTimeoutMS', '30000');
+    uri.searchParams.set('socketTimeoutMS', '45000');
+    uri.searchParams.set('serverSelectionTimeoutMS', '30000');
+    uri.searchParams.set('appName', 'ViralDeals');
 
-    if (!cached.promise) {
-      const opts = {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        bufferCommands: false,
-        serverSelectionTimeoutMS: 10000,
-        socketTimeoutMS: 45000,
-        connectTimeoutMS: 10000,
-        maxPoolSize: 10,
-        minPoolSize: 5,
-        maxIdleTimeMS: 60000,
-        compressors: 'zlib',
-        keepAlive: true,
-        keepAliveInitialDelay: 300000
-      };
+    const opts = {
+      bufferCommands: false,
+      autoIndex: process.env.NODE_ENV !== 'production',
+      maxPoolSize: 10,
+      minPoolSize: 5,
+      maxIdleTimeMS: 60000,
+      connectTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 30000,
+      serverApi: { version: '1', strict: true, deprecationErrors: true }
+    };
 
-      console.log('Attempting new connection with options:', JSON.stringify(opts));
-
-      // Add event listeners before connecting
-      mongoose.connection.on('connected', () => console.log('Mongoose connected to DB'));
-      mongoose.connection.on('error', (err) => console.error('Mongoose connection error:', err));
-      mongoose.connection.on('disconnected', () => console.log('Mongoose disconnected'));
-
-      cached.promise = mongoose.connect(uri, opts)
-        .then((mongoose) => {
-          console.log('MongoDB Connected Successfully');
-          console.log('Connection state after connect:', mongoose.connection.readyState);
-          return mongoose;
-        })
-        .catch((error) => {
-          console.error('MongoDB connection error details:', {
-            name: error.name,
-            message: error.message,
-            code: error.code,
-            state: mongoose.connection.readyState
-          });
-          cached.promise = null;
-          throw error;
+    // Create new connection promise
+    cached.promise = mongoose
+      .connect(uri.toString(), opts)
+      .then((conn) => {
+        console.log('New MongoDB connection established');
+        cached.conn = conn;
+        return conn;
+      })
+      .catch((error) => {
+        console.error('MongoDB connection error:', {
+          name: error.name,
+          message: error.message,
+          code: error.code
         });
-    }
+        cached.promise = null;
+        throw error;
+      })
+      .finally(() => {
+        cached.isConnecting = false;
+      });
 
-    cached.conn = await cached.promise;
-    return cached.conn;
+    return cached.promise;
   } catch (error) {
     console.error('Connection error in connectDB:', error);
+    cached.isConnecting = false;
     cached.promise = null;
     throw error;
   }
@@ -103,29 +114,11 @@ const connectDB = async () => {
 // Middleware to ensure DB connection
 const ensureDbConnected = async (req, res, next) => {
   try {
-    console.log('ensureDbConnected: Starting connection check');
-    
-    // Add request timeout
-    const timeout = setTimeout(() => {
-      console.error('Connection timeout in middleware');
-      res.status(500).json({
-        success: false,
-        message: 'Database connection timeout'
-      });
-    }, 9000); // Set to 9s to be under Vercel's function timeout
-
     await connectDB();
-    clearTimeout(timeout);
-    
-    console.log('ensureDbConnected: Connection successful');
     next();
   } catch (error) {
-    console.error('Database connection middleware error:', {
-      name: error.name,
-      message: error.message,
-      code: error.code
-    });
-    res.status(500).json({
+    console.error('Database connection middleware error:', error);
+    res.status(503).json({
       success: false,
       message: 'Database connection error',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -138,7 +131,7 @@ const ensureDbConnected = async (req, res, next) => {
   process.on(signal, async () => {
     try {
       if (cached.conn) {
-        await cached.conn.disconnect();
+        await cached.conn.close();
         console.log('MongoDB disconnected through app termination');
       }
       process.exit(0);

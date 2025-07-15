@@ -19,10 +19,26 @@ export const register = async (req, res) => {
 
     const { name, email, password, phone } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { phone }]
-    });
+    // Check if user already exists with retry logic
+    let existingUser = null;
+    let retryCount = 0;
+    const maxRetries = 3;
+
+    while (retryCount < maxRetries) {
+      try {
+        existingUser = await User.findOne({
+          $or: [{ email }, { phone }]
+        }).maxTimeMS(5000); // Set explicit timeout for this query
+        break; // If query succeeds, exit loop
+      } catch (error) {
+        retryCount++;
+        if (retryCount === maxRetries) {
+          throw error; // If all retries fail, throw the error
+        }
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+      }
+    }
 
     if (existingUser) {
       return res.status(400).json({
@@ -31,20 +47,36 @@ export const register = async (req, res) => {
       });
     }
 
-    // Create user
-    const user = await User.create({
-      name,
-      email,
-      password,
-      phone
-    });
+    // Create user with retry logic
+    let user = null;
+    retryCount = 0;
+
+    while (retryCount < maxRetries) {
+      try {
+        user = await User.create({
+          name,
+          email,
+          password,
+          phone
+        });
+        break; // If creation succeeds, exit loop
+      } catch (error) {
+        retryCount++;
+        if (retryCount === maxRetries) {
+          throw error; // If all retries fail, throw the error
+        }
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+      }
+    }
 
     sendTokenResponse(user, 201, res, 'User registered successfully');
   } catch (error) {
     console.error('Register error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error during registration'
+      message: 'Server error during registration',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

@@ -12,6 +12,15 @@ const analyticsRateLimit = rateLimit({
   message: {
     success: false,
     message: 'Too many analytics events, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Configure IP extraction behind proxy
+  keyGenerator: (req) => {
+    // Use leftmost forwarded IP as it's from Vercel
+    const xForwardedFor = req.headers['x-forwarded-for'];
+    const ip = xForwardedFor ? xForwardedFor.split(',')[0] : req.ip;
+    return ip;
   }
 });
 
