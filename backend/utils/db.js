@@ -16,8 +16,13 @@ if (!cached) {
 
 const connectDB = async () => {
   if (cached.conn) {
-    console.log('Using cached MongoDB connection');
-    return cached.conn;
+    if (cached.conn.readyState === STATES.connected) {
+      console.log('Using cached MongoDB connection');
+      return cached.conn;
+    }
+    // If connection is not in connected state, clear it and reconnect
+    cached.conn = null;
+    cached.promise = null;
   }
 
   if (!cached.promise) {
@@ -27,11 +32,14 @@ const connectDB = async () => {
       bufferCommands: false,
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
+      connectTimeoutMS: 10000,
+      maxPoolSize: 10,
+      minPoolSize: 5
     };
 
     cached.promise = mongoose.connect(process.env.MONGODB_URI, opts)
       .then((mongoose) => {
-        console.log('MongoDB Connected');
+        console.log('MongoDB Connected Successfully');
         return mongoose;
       })
       .catch((error) => {
@@ -51,29 +59,33 @@ const connectDB = async () => {
 };
 
 // Middleware to ensure DB connection
-export const ensureDbConnected = async (req, res, next) => {
+const ensureDbConnected = async (req, res, next) => {
   try {
-    // Check if we're already connected
-    if (mongoose.connection.readyState === STATES.connected) {
-      return next();
-    }
-
-    // If we're currently connecting, wait for it
-    if (mongoose.connection.readyState === STATES.connecting && cached.promise) {
-      await cached.promise;
-      return next();
-    }
-
-    // Otherwise establish a new connection
     await connectDB();
     next();
   } catch (error) {
-    console.error('Database connection error:', error);
+    console.error('Database connection middleware error:', error);
     res.status(500).json({
       success: false,
-      message: 'Database connection failed'
+      message: 'Database connection error'
     });
   }
 };
 
-export default connectDB; 
+// Handle process termination
+['SIGTERM', 'SIGINT'].forEach(signal => {
+  process.on(signal, async () => {
+    try {
+      if (cached.conn) {
+        await cached.conn.disconnect();
+        console.log('MongoDB disconnected through app termination');
+      }
+      process.exit(0);
+    } catch (err) {
+      console.error('Error during database disconnection:', err);
+      process.exit(1);
+    }
+  });
+});
+
+export { connectDB, ensureDbConnected }; 

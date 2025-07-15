@@ -107,7 +107,6 @@ const productSchema = new mongoose.Schema({
     keywords: [String],
     slug: {
       type: String,
-      unique: true,
       sparse: true
     }
   },
@@ -141,8 +140,14 @@ productSchema.index({ 'seo.slug': 1 }, { unique: true, sparse: true });
 productSchema.index({ name: 'text', description: 'text' });
 
 // Handle timeouts gracefully
-productSchema.pre(['find', 'findOne', 'aggregate'], function() {
+productSchema.pre(['find', 'findOne'], function() {
   this.maxTimeMS(5000);
+});
+
+// Handle aggregate timeouts separately
+productSchema.pre('aggregate', function() {
+  this.options = this.options || {};
+  this.options.maxTimeMS = 5000;
 });
 
 const Product = mongoose.models.Product || mongoose.model('Product', productSchema);

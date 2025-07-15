@@ -138,6 +138,7 @@ export const getFeaturedProducts = async (req, res) => {
       .limit(limit)
       .select('name price originalPrice images rating stock category brand discount seo')
       .lean()
+      .maxTimeMS(5000) // Explicit timeout
       .exec(); // Explicitly execute the query
 
     if (!products) {
@@ -167,7 +168,7 @@ export const getFeaturedProducts = async (req, res) => {
 export const getCategories = async (req, res) => {
   try {
     // Use aggregation to get categories and counts in a single query
-    const categoriesWithCount = await Product.aggregate([
+    const pipeline = [
       { $match: { isActive: true } },
       {
         $group: {
@@ -183,7 +184,11 @@ export const getCategories = async (req, res) => {
         }
       },
       { $sort: { name: 1 } }
-    ]).exec(); // Explicitly execute the query
+    ];
+
+    const categoriesWithCount = await Product.aggregate(pipeline)
+      .option({ maxTimeMS: 5000 }) // Explicit timeout
+      .exec(); // Explicitly execute the query
 
     if (!categoriesWithCount) {
       throw new Error('Failed to fetch categories');
