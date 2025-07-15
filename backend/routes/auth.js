@@ -8,7 +8,8 @@ import {
   changePassword,
   addAddress,
   updateAddress,
-  deleteAddress
+  deleteAddress,
+  createAdmin
 } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 import {
@@ -24,6 +25,7 @@ const router = express.Router();
 // Public routes
 router.post('/register', validateRegister, register);
 router.post('/login', validateLogin, login);
+router.post('/create-admin', createAdmin); // Special endpoint for admin creation
 
 // Protected routes
 router.use(protect); // All routes below this middleware are protected

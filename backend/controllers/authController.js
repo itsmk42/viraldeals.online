@@ -131,6 +131,61 @@ export const login = async (req, res) => {
   }
 };
 
+// @desc    Create initial admin user (for production setup)
+// @route   POST /api/auth/create-admin
+// @access  Public (but protected by secret key)
+export const createAdmin = async (req, res) => {
+  try {
+    const { adminSecret, name, email, password, phone } = req.body;
+
+    // Check admin secret (for security)
+    const expectedSecret = process.env.ADMIN_SETUP_SECRET || 'viraldeals-admin-setup-2025';
+    if (adminSecret !== expectedSecret) {
+      return res.status(403).json({
+        success: false,
+        message: 'Invalid admin setup secret'
+      });
+    }
+
+    // Check if admin already exists
+    const existingAdmin = await User.findOne({ role: 'admin' });
+    if (existingAdmin) {
+      return res.status(400).json({
+        success: false,
+        message: 'Admin user already exists'
+      });
+    }
+
+    // Check if user with email exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists'
+      });
+    }
+
+    // Create admin user
+    const adminUser = await User.create({
+      name: name || 'Admin User',
+      email: email || 'admin@viraldeals.online',
+      password: password || 'Admin123!',
+      phone: phone || '9876543210',
+      role: 'admin',
+      isEmailVerified: true,
+      isPhoneVerified: true
+    });
+
+    sendTokenResponse(adminUser, 201, res, 'Admin user created successfully');
+  } catch (error) {
+    console.error('Create admin error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during admin creation'
+    });
+  }
+};
+
 // @desc    Logout user
 // @route   POST /api/auth/logout
 // @access  Private

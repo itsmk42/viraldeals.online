@@ -9,6 +9,7 @@
     "dev": "nodemon server.js",
     "seed": "node utils/seeder.js",
     "seed:delete": "node utils/seeder.js -d",
+    "create-admin": "node utils/createAdminUser.js",
     "test": "NODE_ENV=test jest",
     "test:watch": "NODE_ENV=test jest --watch",
     "test:coverage": "NODE_ENV=test jest --coverage"
