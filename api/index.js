@@ -41,10 +41,7 @@ const connectDB = async () => {
       return;
     }
     
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/viraldeals', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/viraldeals');
     
     console.log('MongoDB Connected');
   } catch (error) {
