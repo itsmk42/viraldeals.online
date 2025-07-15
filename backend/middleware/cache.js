@@ -41,6 +41,33 @@ export const cacheMiddleware = (keyGenerator, ttl = 3600) => {
   };
 };
 
+// Simple cache middleware that takes TTL as string (e.g. '1h', '30m', '1d')
+export const cache = (ttl) => {
+  const ttlInSeconds = parseTTL(ttl);
+  return cacheMiddleware(
+    (req) => cacheService.generateKey(req.originalUrl),
+    ttlInSeconds
+  );
+};
+
+// Helper to parse TTL string to seconds
+function parseTTL(ttl) {
+  const units = {
+    s: 1,
+    m: 60,
+    h: 3600,
+    d: 86400
+  };
+  
+  const match = ttl.match(/^(\d+)([smhd])$/);
+  if (!match) {
+    throw new Error('Invalid TTL format. Use format: number + unit (s/m/h/d). Example: "1h", "30m", "1d"');
+  }
+  
+  const [, value, unit] = match;
+  return parseInt(value) * units[unit];
+}
+
 // Products cache middleware
 export const productsCacheMiddleware = cacheMiddleware(
   (req) => {
