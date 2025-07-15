@@ -13,6 +13,49 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// MongoDB connection options
+const mongooseOptions = {
+  serverSelectionTimeoutMS: 5000, // Timeout for server selection
+  socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+  connectTimeoutMS: 10000, // Give up initial connection after 10 seconds
+  maxPoolSize: 10, // Maintain up to 10 socket connections
+  minPoolSize: 1, // Maintain at least 1 socket connection
+  maxIdleTimeMS: 30000, // Close idle connections after 30 seconds
+  retryWrites: true,
+  retryReads: true
+};
+
+// Keep track of the connection
+let cachedDb = null;
+
+// MongoDB connection
+const connectDB = async () => {
+  try {
+    // If we have a cached connection, and it's connected, reuse it
+    if (cachedDb && mongoose.connection.readyState === 1) {
+      console.log('Using cached database connection');
+      return cachedDb;
+    }
+
+    // Connect to MongoDB
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/viraldeals', mongooseOptions);
+    
+    // Cache the connection
+    cachedDb = conn;
+    
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    return conn;
+  } catch (error) {
+    console.error('Database connection error:', error);
+    // In Lambda, we don't want to exit the process on connection failure
+    if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+      throw error;
+    } else {
+      process.exit(1);
+    }
+  }
+};
+
 // Security middleware
 app.use(helmet());
 
@@ -44,17 +87,6 @@ app.use(cors({
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// MongoDB connection
-const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/viraldeals');
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error('Database connection error:', error);
-    process.exit(1);
-  }
-};
 
 // Routes
 app.get('/', (req, res) => {
@@ -136,14 +168,24 @@ const gracefulShutdown = async () => {
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
-// Start server
+// Modify startServer to handle Lambda environment
 const startServer = async () => {
   await connectDB();
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`Cache service initialized`);
-  });
+  
+  // Only start the Express server if we're not in Lambda
+  if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`Cache service initialized`);
+    });
+  }
 };
 
-startServer();
+// Export the app and connection function for Lambda handler
+export { app, connectDB };
+
+// Start server if we're not in Lambda
+if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  startServer();
+}

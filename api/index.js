@@ -2,18 +2,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-// Import routes
-import authRoutes from '../backend/routes/auth.js';
-import productRoutes from '../backend/routes/products.js';
-import orderRoutes from '../backend/routes/orders.js';
-import paymentRoutes from '../backend/routes/payments.js';
-import adminRoutes from '../backend/routes/admin.js';
-import uploadRoutes from '../backend/routes/upload.js';
-import scraperRoutes from '../backend/routes/scraper.js';
+import { handler } from '../backend/lambda.js';
 
 // Load environment variables
 dotenv.config();
@@ -21,6 +12,7 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Create express app for local development
 const app = express();
 
 // CORS configuration
@@ -34,66 +26,81 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Connect to MongoDB
-const connectDB = async () => {
-  try {
-    if (mongoose.connections[0].readyState) {
-      return;
-    }
-    
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/viraldeals', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    
-    console.log('MongoDB Connected');
-  } catch (error) {
-    console.error('Database connection error:', error);
-  }
-};
-
-// Initialize database connection
-connectDB();
-
-// Health check endpoint
-app.get('/api', (req, res) => {
-  res.json({ 
-    success: true, 
-    message: 'ViralDeals.online API is running!',
+// Health check endpoint for local development
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'API is running',
+    environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString()
   });
 });
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/scraper', scraperRoutes);
+// Vercel serverless function handler
+export default async function (req, res) {
+  // If running locally, use Express directly
+  if (process.env.NODE_ENV !== 'production') {
+    return app(req, res);
+  }
 
-// Serve static files (uploads)
-app.use('/uploads', express.static(path.join(__dirname, '../backend/uploads')));
+  // In production, use the Lambda handler which includes all routes from server.js
+  try {
+    // Create a mock event object that Vercel can understand
+    const event = {
+      body: req.body,
+      headers: req.headers,
+      httpMethod: req.method,
+      path: req.url,
+      queryStringParameters: req.query,
+      // Add raw body for webhooks that need it
+      rawBody: req.rawBody
+    };
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({
-    success: false,
-    message: process.env.NODE_ENV === 'production' 
-      ? 'Internal server error' 
-      : err.message
-  });
-});
+    // Create a mock context object
+    const context = {
+      callbackWaitsForEmptyEventLoop: true
+    };
 
-// Handle 404
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'API endpoint not found'
-  });
-});
+    // Call our Lambda handler (this will use all routes defined in server.js)
+    const response = await handler(event, context);
+    
+    // Set the status code
+    res.status(response.statusCode);
 
-// Export for Vercel
-export default app;
+    // Set the headers
+    if (response.headers) {
+      Object.keys(response.headers).forEach(header => {
+        res.setHeader(header, response.headers[header]);
+      });
+    }
+
+    // Send the response
+    if (response.body) {
+      // Check if the body is already stringified
+      if (typeof response.body === 'string') {
+        try {
+          // Try to parse it to see if it's JSON
+          JSON.parse(response.body);
+          res.setHeader('Content-Type', 'application/json');
+        } catch (e) {
+          // If it's not JSON, send as plain text
+          res.setHeader('Content-Type', 'text/plain');
+        }
+        res.send(response.body);
+      } else {
+        // If it's not a string, send as JSON
+        res.json(response.body);
+      }
+    } else {
+      res.end();
+    }
+  } catch (error) {
+    console.error('Lambda handler error:', error);
+    res.status(500).json({
+      success: false,
+      message: process.env.NODE_ENV === 'production' 
+        ? 'Internal server error' 
+        : error.message
+    });
+  }
+}
