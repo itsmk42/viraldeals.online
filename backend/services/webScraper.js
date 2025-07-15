@@ -4,6 +4,19 @@ import axios from 'axios';
 import robotsParser from 'robots-parser';
 import winston from 'winston';
 import { URL } from 'url';
+import path from 'path';
+import fs from 'fs';
+
+// Determine if we're in production (Lambda) environment
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Set logs directory based on environment
+const logsDir = isProduction ? '/tmp/logs' : 'logs';
+
+// Create logs directory if it doesn't exist
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
 
 // Configure logger
 const logger = winston.createLogger({
@@ -14,8 +27,8 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
   transports: [
-    new winston.transports.File({ filename: 'logs/scraper-error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/scraper.log' }),
+    new winston.transports.File({ filename: path.join(logsDir, 'scraper-error.log'), level: 'error' }),
+    new winston.transports.File({ filename: path.join(logsDir, 'scraper.log') }),
     new winston.transports.Console({
       format: winston.format.simple()
     })
