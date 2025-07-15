@@ -154,8 +154,8 @@ const productSchema = new mongoose.Schema({
     metaDescription: String,
     slug: {
       type: String,
-      lowercase: true,
-      index: true // Changed from unique: true to index: true since we'll handle uniqueness in the index definition
+      lowercase: true
+      // Removed index: true completely
     }
   },
   gst: {
@@ -231,6 +231,6 @@ productSchema.index({ category: 1, isActive: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ 'rating.average': -1 });
 productSchema.index({ createdAt: -1 });
-productSchema.index({ 'seo.slug': 1 }, { unique: true }); // Define uniqueness here instead
+productSchema.index({ 'seo.slug': 1 }, { unique: true }); // Only place where we define the slug index
 
 export default mongoose.model('Product', productSchema);

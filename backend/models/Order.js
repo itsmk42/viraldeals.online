@@ -3,8 +3,7 @@ import mongoose from 'mongoose';
 const orderSchema = new mongoose.Schema({
   orderNumber: {
     type: String,
-    required: true,
-    index: true // Changed from unique: true to index: true since we'll handle uniqueness in the index definition
+    required: true
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -232,7 +231,7 @@ orderSchema.pre('save', function(next) {
 
 // Indexes for better performance
 orderSchema.index({ user: 1, createdAt: -1 });
-orderSchema.index({ orderNumber: 1 }, { unique: true }); // Define uniqueness here instead
+orderSchema.index({ orderNumber: 1 }, { unique: true }); // Only place where we define the orderNumber index
 orderSchema.index({ status: 1 });
 orderSchema.index({ 'payment.status': 1 });
 orderSchema.index({ createdAt: -1 });
