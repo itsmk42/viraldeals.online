@@ -51,7 +51,9 @@ router.post('/', protect, authorize('admin'), invalidateProductCache, [
   body('description').trim().notEmpty().withMessage('Description is required'),
   body('price').isFloat({ min: 0 }).withMessage('Valid price is required'),
   body('stock').isInt({ min: 0 }).withMessage('Valid stock quantity is required'),
-  body('category').trim().notEmpty().withMessage('Category is required')
+  body('category').trim().notEmpty().withMessage('Category is required'),
+  body('brand').trim().notEmpty().withMessage('Brand is required'),
+  body('images').isArray({ min: 1 }).withMessage('At least one product image is required')
 ], createProduct);
 
 router.put('/:id', protect, authorize('admin'), invalidateProductCache, [

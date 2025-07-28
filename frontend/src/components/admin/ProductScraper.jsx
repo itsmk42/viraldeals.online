@@ -91,22 +91,36 @@ const ProductScraper = () => {
 
     try {
       // Create product directly with edited data
+      const productData = {
+        ...editableData,
+        price: parseFloat(editableData.price),
+        originalPrice: parseFloat(editableData.originalPrice) || parseFloat(editableData.price),
+        // Ensure required fields are present
+        brand: editableData.brand || 'Unknown Brand',
+        stock: editableData.stock || 100,
+        category: editableData.category || 'Other',
+        images: editableData.images && editableData.images.length > 0 ? editableData.images : [
+          { url: '/placeholder-image.jpg', alt: 'Product image', isPrimary: true }
+        ]
+      };
+
       const response = await fetch('/api/products', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({
-          ...editableData,
-          price: parseFloat(editableData.price),
-          originalPrice: parseFloat(editableData.originalPrice) || parseFloat(editableData.price)
-        })
+        body: JSON.stringify(productData)
       });
 
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle validation errors specifically
+        if (data.errors && Array.isArray(data.errors)) {
+          const errorMessages = data.errors.map(err => err.msg || err.message).join(', ');
+          throw new Error(`Validation failed: ${errorMessages}`);
+        }
         throw new Error(data.message || 'Failed to save product');
       }
 

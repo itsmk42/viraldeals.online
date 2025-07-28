@@ -312,6 +312,16 @@ export const getReviews = async (req, res) => {
 // Create new product (Admin only)
 export const createProduct = async (req, res) => {
   try {
+    // Check for validation errors from express-validator
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
     const productData = {
       ...req.body,
       createdBy: req.user._id
