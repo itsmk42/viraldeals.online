@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
-import { api } from '../services/api';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 
 const PaymentSuccess = () => {
