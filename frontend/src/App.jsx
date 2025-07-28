@@ -26,6 +26,7 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
+import PaymentSuccess from './pages/PaymentSuccess';
 
 // Admin Pages
 import AdminLayout from './components/layout/AdminLayout';
@@ -81,6 +82,7 @@ function App() {
                     <OrderDetail />
                   </ProtectedRoute>
                 } />
+                <Route path="payment/success" element={<PaymentSuccess />} />
               </Route>
 
               {/* Admin Routes */}

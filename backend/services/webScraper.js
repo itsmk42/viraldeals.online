@@ -48,12 +48,15 @@ class DeodapScraper {
   async initialize() {
     try {
       logger.info('Initializing DeodapScraper...');
-      
+
       // Check robots.txt compliance
       await this.checkRobotsCompliance();
-      
-      // Launch browser
-      this.browser = await puppeteer.launch({
+
+      // Detect environment and configure Puppeteer accordingly
+      const isVercel = process.env.VERCEL || process.env.NOW_REGION;
+      const isProduction = process.env.NODE_ENV === 'production';
+
+      let browserConfig = {
         headless: true,
         args: [
           '--no-sandbox',
@@ -62,10 +65,44 @@ class DeodapScraper {
           '--disable-accelerated-2d-canvas',
           '--no-first-run',
           '--no-zygote',
-          '--disable-gpu'
+          '--disable-gpu',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor'
         ]
-      });
-      
+      };
+
+      // Additional configuration for Vercel/serverless environments
+      if (isVercel || isProduction) {
+        browserConfig.args.push(
+          '--single-process',
+          '--no-zygote',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-background-networking',
+          '--disable-ipc-flooding-protection',
+          '--memory-pressure-off'
+        );
+
+        // Use chrome-aws-lambda for serverless if available
+        try {
+          const chromium = await import('chrome-aws-lambda');
+          browserConfig.executablePath = await chromium.executablePath;
+          browserConfig.args = chromium.args;
+          logger.info('Using chrome-aws-lambda for serverless environment');
+        } catch (error) {
+          logger.warn('chrome-aws-lambda not available, using default Puppeteer');
+        }
+      }
+
+      // Launch browser with timeout
+      this.browser = await Promise.race([
+        puppeteer.launch(browserConfig),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Browser launch timeout')), 30000)
+        )
+      ]);
+
       logger.info('DeodapScraper initialized successfully');
       return true;
     } catch (error) {
@@ -99,12 +136,36 @@ class DeodapScraper {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  // Scrape product from URL
-  async scrapeProduct(productUrl) {
-    if (!this.browser) {
-      throw new Error('Scraper not initialized. Call initialize() first.');
-    }
+  // Fallback scraping method using axios (for serverless environments)
+  async scrapeProductFallback(productUrl) {
+    try {
+      logger.info(`Using fallback scraping method for: ${productUrl}`);
 
+      const response = await axios.get(productUrl, {
+        headers: {
+          'User-Agent': this.userAgent,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1'
+        },
+        timeout: 15000
+      });
+
+      const $ = cheerio.load(response.data);
+      const productData = this.extractProductData($, productUrl);
+
+      logger.info(`Successfully scraped product with fallback: ${productData.name}`);
+      return productData;
+    } catch (error) {
+      logger.error(`Fallback scraping failed for ${productUrl}:`, error);
+      throw error;
+    }
+  }
+
+  // Scrape product from URL with fallback support
+  async scrapeProduct(productUrl) {
     try {
       // Validate URL
       const url = new URL(productUrl);
@@ -119,35 +180,47 @@ class DeodapScraper {
 
       logger.info(`Starting to scrape product: ${productUrl}`);
 
-      const page = await this.browser.newPage();
-      
-      // Set user agent and viewport
-      await page.setUserAgent(this.userAgent);
-      await page.setViewport({ width: 1920, height: 1080 });
+      // Try Puppeteer first if browser is available, fallback to axios if it fails
+      if (this.browser) {
+        try {
+          const page = await this.browser.newPage();
 
-      // Navigate to product page
-      await page.goto(productUrl, { 
-        waitUntil: 'networkidle2',
-        timeout: 30000 
-      });
+          // Set user agent and viewport
+          await page.setUserAgent(this.userAgent);
+          await page.setViewport({ width: 1920, height: 1080 });
 
-      // Wait for content to load
-      await page.waitForSelector('h1, .product-title, [data-testid="product-title"]', { timeout: 10000 });
+          // Navigate to product page with shorter timeout for serverless
+          await page.goto(productUrl, {
+            waitUntil: 'domcontentloaded',
+            timeout: 20000
+          });
 
-      // Get page content
-      const content = await page.content();
-      const $ = cheerio.load(content);
+          // Wait for content to load with shorter timeout
+          await page.waitForSelector('h1, .product-title, [data-testid="product-title"]', { timeout: 8000 });
 
-      // Extract product data
-      const productData = this.extractProductData($, productUrl);
+          // Get page content
+          const content = await page.content();
+          const $ = cheerio.load(content);
 
-      await page.close();
-      
-      // Add delay before next request
-      await this.delay();
+          // Extract product data
+          const productData = this.extractProductData($, productUrl);
 
-      logger.info(`Successfully scraped product: ${productData.name}`);
-      return productData;
+          await page.close();
+
+          // Add delay before next request
+          await this.delay();
+
+          logger.info(`Successfully scraped product with Puppeteer: ${productData.name}`);
+          return productData;
+        } catch (puppeteerError) {
+          logger.warn(`Puppeteer scraping failed, trying fallback: ${puppeteerError.message}`);
+          return await this.scrapeProductFallback(productUrl);
+        }
+      } else {
+        // Browser not available, use fallback method
+        logger.info('Browser not available, using fallback method');
+        return await this.scrapeProductFallback(productUrl);
+      }
 
     } catch (error) {
       logger.error(`Error scraping product ${productUrl}:`, error);

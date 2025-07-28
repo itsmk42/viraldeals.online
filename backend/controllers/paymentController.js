@@ -1,4 +1,5 @@
 import Order from '../models/Order.js';
+import phonePeService from '../services/phonePeService.js';
 
 // @desc    Create payment intent for UPI
 // @route   POST /api/payments/upi
@@ -221,12 +222,20 @@ export const verifyPayment = async (req, res) => {
 export const getPaymentMethods = async (req, res) => {
   try {
     const paymentMethods = {
+      phonepe: {
+        name: 'PhonePe',
+        description: 'Pay securely with PhonePe - UPI, Cards, Wallets & More',
+        icon: 'phonepe',
+        enabled: true,
+        popular: true,
+        gateway: 'PhonePe'
+      },
       upi: {
         name: 'UPI',
         description: 'Pay using UPI apps like GPay, PhonePe, Paytm',
         icon: 'upi',
         enabled: true,
-        popular: true
+        popular: false
       },
       cards: {
         name: 'Credit/Debit Cards',
@@ -279,6 +288,171 @@ export const getPaymentMethods = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error while fetching payment methods'
+    });
+  }
+};
+
+// @desc    Create PhonePe payment
+// @route   POST /api/payments/phonepe
+// @access  Private
+export const createPhonePePayment = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+
+    const order = await Order.findById(orderId).populate('user');
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    // Prepare payment data
+    const paymentData = {
+      orderId: order._id,
+      amount: order.pricing.total,
+      userPhone: order.user.phone,
+      userName: order.user.name,
+      userEmail: order.user.email
+    };
+
+    console.log('Creating PhonePe payment for order:', order.orderNumber);
+
+    // Create payment with PhonePe
+    const paymentResponse = await phonePeService.createPayment(paymentData);
+
+    // Update order with payment details
+    order.payment.method = 'PhonePe';
+    order.payment.status = 'Processing';
+    order.payment.paymentGateway = 'PhonePe';
+    order.payment.transactionId = paymentResponse.merchantTransactionId;
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'PhonePe payment initiated successfully',
+      payment: {
+        paymentId: paymentResponse.paymentId,
+        merchantTransactionId: paymentResponse.merchantTransactionId,
+        paymentUrl: paymentResponse.paymentUrl,
+        amount: order.pricing.total,
+        currency: 'INR',
+        method: 'PhonePe',
+        status: 'initiated'
+      }
+    });
+
+  } catch (error) {
+    console.error('PhonePe payment creation error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to create PhonePe payment'
+    });
+  }
+};
+
+// @desc    Handle PhonePe callback
+// @route   POST /api/payments/phonepe/callback
+// @access  Public
+export const handlePhonePeCallback = async (req, res) => {
+  try {
+    const { response } = req.body;
+    const xVerify = req.headers['x-verify'];
+
+    console.log('PhonePe callback received:', { response: response ? 'present' : 'missing', xVerify: xVerify ? 'present' : 'missing' });
+
+    // Verify callback signature
+    if (!phonePeService.verifyCallback(xVerify, response)) {
+      console.error('PhonePe callback verification failed');
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid callback signature'
+      });
+    }
+
+    // Decode response
+    const decodedResponse = JSON.parse(Buffer.from(response, 'base64').toString());
+    const merchantTransactionId = decodedResponse.data.merchantTransactionId;
+
+    console.log('PhonePe callback data:', decodedResponse);
+
+    // Find order by transaction ID
+    const order = await Order.findOne({ 'payment.transactionId': merchantTransactionId });
+    if (!order) {
+      console.error('Order not found for transaction:', merchantTransactionId);
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    // Update order based on payment status
+    if (decodedResponse.success && decodedResponse.data.state === 'COMPLETED') {
+      order.payment.status = 'Completed';
+      order.payment.paidAt = new Date();
+      order.status = 'Confirmed';
+
+      console.log('Payment successful for order:', order.orderNumber);
+    } else {
+      order.payment.status = 'Failed';
+      order.payment.failureReason = decodedResponse.message || 'Payment failed';
+
+      console.log('Payment failed for order:', order.orderNumber, 'Reason:', order.payment.failureReason);
+    }
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Callback processed successfully'
+    });
+
+  } catch (error) {
+    console.error('PhonePe callback processing error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Callback processing failed'
+    });
+  }
+};
+
+// @desc    Check PhonePe payment status
+// @route   GET /api/payments/phonepe/status/:transactionId
+// @access  Private
+export const checkPhonePeStatus = async (req, res) => {
+  try {
+    const { transactionId } = req.params;
+
+    console.log('Checking PhonePe payment status for:', transactionId);
+
+    // Check status with PhonePe
+    const statusResponse = await phonePeService.checkPaymentStatus(transactionId);
+
+    // Find and update order
+    const order = await Order.findOne({ 'payment.transactionId': transactionId });
+    if (order) {
+      if (statusResponse.success && statusResponse.status === 'COMPLETED') {
+        order.payment.status = 'Completed';
+        order.payment.paidAt = new Date();
+        order.status = 'Confirmed';
+      } else if (statusResponse.status === 'FAILED') {
+        order.payment.status = 'Failed';
+        order.payment.failureReason = statusResponse.responseMessage || 'Payment failed';
+      }
+      await order.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      status: statusResponse,
+      order: order
+    });
+
+  } catch (error) {
+    console.error('PhonePe status check error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Status check failed'
     });
   }
 };

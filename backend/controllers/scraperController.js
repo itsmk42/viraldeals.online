@@ -38,13 +38,19 @@ class ScraperController {
     this.isInitialized = false;
   }
 
-  // Initialize scraper
+  // Initialize scraper with fallback support
   async initializeScraper() {
     if (!this.isInitialized) {
       this.scraper = new DeodapScraper();
-      await this.scraper.initialize();
-      this.isInitialized = true;
-      logger.info('Scraper initialized successfully');
+      try {
+        await this.scraper.initialize();
+        this.isInitialized = true;
+        logger.info('Scraper initialized successfully with browser');
+      } catch (error) {
+        logger.warn('Browser initialization failed, will use fallback method:', error.message);
+        // Still mark as initialized to allow fallback scraping
+        this.isInitialized = true;
+      }
     }
     return this.scraper;
   }

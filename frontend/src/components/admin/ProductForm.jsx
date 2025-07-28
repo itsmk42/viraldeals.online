@@ -17,7 +17,12 @@ const ProductForm = ({ mode = 'create' }) => {
   const navigate = useNavigate();
   const { id } = useParams();
   const queryClient = useQueryClient();
-  const { data: categories = [] } = useCategories();
+  const { data: categories = [], isLoading: categoriesLoading, error: categoriesError } = useCategories();
+
+  // Debug categories loading
+  React.useEffect(() => {
+    console.log('Categories loading state:', { categories, categoriesLoading, categoriesError });
+  }, [categories, categoriesLoading, categoriesError]);
 
   const [loading, setLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
@@ -464,15 +469,38 @@ const ProductForm = ({ mode = 'create' }) => {
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
                   errors.category ? 'border-red-500' : 'border-gray-300'
                 }`}
+                disabled={categoriesLoading}
               >
-                <option value="">Select Category</option>
-                {categories.map((category) => (
-                  <option key={category.name} value={category.name}>
-                    {category.name}
-                  </option>
-                ))}
+                <option value="">
+                  {categoriesLoading ? 'Loading categories...' : 'Select Category'}
+                </option>
+                {categories && categories.length > 0 ? (
+                  categories.map((category) => (
+                    <option key={category.name} value={category.name}>
+                      {category.name} ({category.count || 0})
+                    </option>
+                  ))
+                ) : (
+                  // Fallback categories if API fails
+                  <>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Clothing">Clothing</option>
+                    <option value="Home & Garden">Home & Garden</option>
+                    <option value="Sports & Outdoors">Sports & Outdoors</option>
+                    <option value="Health & Beauty">Health & Beauty</option>
+                    <option value="Books">Books</option>
+                    <option value="Toys & Games">Toys & Games</option>
+                    <option value="Automotive">Automotive</option>
+                    <option value="Viral Picks">Viral Picks</option>
+                  </>
+                )}
               </select>
               {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
+              {categoriesError && (
+                <p className="text-yellow-600 text-sm mt-1">
+                  ⚠️ Failed to load categories from server. Using fallback options.
+                </p>
+              )}
             </div>
 
             <div>

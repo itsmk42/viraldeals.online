@@ -99,7 +99,7 @@ const orderSchema = new mongoose.Schema({
     method: {
       type: String,
       required: true,
-      enum: ['UPI', 'Card', 'NetBanking', 'Wallet', 'COD']
+      enum: ['UPI', 'Card', 'NetBanking', 'Wallet', 'COD', 'PhonePe']
     },
     status: {
       type: String,

@@ -13,6 +13,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api';
 import toast from 'react-hot-toast';
+import PhonePePayment from '../components/PhonePePayment';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -24,7 +25,9 @@ const Checkout = () => {
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('UPI');
+  const [paymentMethod, setPaymentMethod] = useState('PhonePe');
+  const [orderId, setOrderId] = useState(null);
+  const [showPayment, setShowPayment] = useState(false);
 
   const [newAddress, setNewAddress] = useState({
     type: 'home',
@@ -109,13 +112,44 @@ const Checkout = () => {
     try {
       setLoading(true);
 
-      // Simulate order placement
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Create order first
+      const orderData = {
+        items: items.map(item => ({
+          product: item._id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+          sku: item.sku
+        })),
+        shippingAddress: selectedAddress,
+        billingAddress: { sameAsShipping: true },
+        payment: {
+          method: paymentMethod
+        }
+      };
 
-      // Clear cart and redirect to success page
-      clearCart();
-      toast.success('Order placed successfully!');
-      navigate('/orders');
+      // For demo purposes, simulate order creation
+      const mockOrderId = `order_${Date.now()}`;
+      setOrderId(mockOrderId);
+
+      if (paymentMethod === 'PhonePe') {
+        // Show PhonePe payment component
+        setShowPayment(true);
+        setCurrentStep(4); // New payment step
+      } else if (paymentMethod === 'COD') {
+        // Handle COD orders
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        clearCart();
+        toast.success('Order placed successfully!');
+        navigate('/orders');
+      } else {
+        // Handle other payment methods
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        clearCart();
+        toast.success('Order placed successfully!');
+        navigate('/orders');
+      }
 
     } catch (error) {
       console.error('Error placing order:', error);
@@ -125,13 +159,35 @@ const Checkout = () => {
     }
   };
 
+  const handlePaymentSuccess = (paymentData) => {
+    console.log('Payment successful:', paymentData);
+    clearCart();
+    toast.success('Order placed and payment completed successfully!');
+    navigate('/orders');
+  };
+
+  const handlePaymentError = (error) => {
+    console.error('Payment failed:', error);
+    toast.error('Payment failed. Please try again.');
+    setShowPayment(false);
+    setCurrentStep(3); // Go back to review step
+  };
+
   const paymentMethods = [
+    {
+      id: 'PhonePe',
+      name: 'PhonePe',
+      icon: DevicePhoneMobileIcon,
+      description: 'Pay securely with PhonePe - UPI, Cards, Wallets & More',
+      popular: true,
+      gateway: true
+    },
     {
       id: 'UPI',
       name: 'UPI',
       icon: DevicePhoneMobileIcon,
       description: 'Pay using UPI apps like GPay, PhonePe, Paytm',
-      popular: true
+      popular: false
     },
     {
       id: 'Card',
@@ -549,6 +605,35 @@ const Checkout = () => {
                     className="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50"
                   >
                     {loading ? 'Placing Order...' : `Place Order - ${formatPrice(finalTotal)}`}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: PhonePe Payment */}
+            {currentStep === 4 && showPayment && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Complete Payment</h2>
+                  <p className="text-gray-600">Secure payment with PhonePe</p>
+                </div>
+
+                <PhonePePayment
+                  orderId={orderId}
+                  amount={finalTotal}
+                  onSuccess={handlePaymentSuccess}
+                  onError={handlePaymentError}
+                />
+
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => {
+                      setCurrentStep(3);
+                      setShowPayment(false);
+                    }}
+                    className="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                  >
+                    Back to Review
                   </button>
                 </div>
               </div>
