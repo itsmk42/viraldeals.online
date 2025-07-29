@@ -80,10 +80,35 @@ const productSchema = new mongoose.Schema({
       required: true,
       maxLength: 500
     },
+    reviewerName: {
+      type: String,
+      required: true,
+      maxLength: 100
+    },
     createdAt: {
       type: Date,
       default: Date.now
     }
+  }],
+  features: [{
+    type: String,
+    maxLength: 200
+  }],
+  specifications: [{
+    key: {
+      type: String,
+      required: true,
+      maxLength: 100
+    },
+    value: {
+      type: String,
+      required: true,
+      maxLength: 200
+    }
+  }],
+  tags: [{
+    type: String,
+    maxLength: 50
   }],
   isFeatured: {
     type: Boolean,
@@ -149,6 +174,18 @@ productSchema.pre('aggregate', function() {
   this.options = this.options || {};
   this.options.maxTimeMS = 5000;
 });
+
+// Method to update rating based on reviews
+productSchema.methods.updateRating = function() {
+  if (this.reviews.length === 0) {
+    this.rating.average = 0;
+    this.rating.count = 0;
+  } else {
+    const totalRating = this.reviews.reduce((sum, review) => sum + review.rating, 0);
+    this.rating.average = Math.round((totalRating / this.reviews.length) * 10) / 10;
+    this.rating.count = this.reviews.length;
+  }
+};
 
 const Product = mongoose.models.Product || mongoose.model('Product', productSchema);
 

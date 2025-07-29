@@ -241,7 +241,8 @@ export const addReview = async (req, res) => {
     const review = {
       user: req.user._id,
       rating: Number(rating),
-      comment
+      comment,
+      reviewerName: req.user.name || 'Anonymous User'
     };
 
     product.reviews.push(review);
@@ -507,6 +508,148 @@ export const bulkUpdateStock = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to update stock'
+    });
+  }
+};
+
+// @desc    Add admin review to product
+// @route   POST /api/products/:id/admin/reviews
+// @access  Private/Admin
+export const addAdminReview = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { rating, comment, reviewerName } = req.body;
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    const review = {
+      user: req.user._id,
+      rating: Number(rating),
+      comment,
+      reviewerName,
+      createdAt: new Date()
+    };
+
+    product.reviews.push(review);
+    product.updateRating();
+    await product.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Review added successfully',
+      review: product.reviews[product.reviews.length - 1]
+    });
+  } catch (error) {
+    console.error('Add admin review error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while adding review'
+    });
+  }
+};
+
+// @desc    Update admin review
+// @route   PUT /api/products/:id/admin/reviews/:reviewId
+// @access  Private/Admin
+export const updateAdminReview = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { rating, comment, reviewerName } = req.body;
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    const review = product.reviews.id(req.params.reviewId);
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: 'Review not found'
+      });
+    }
+
+    review.rating = Number(rating);
+    review.comment = comment;
+    review.reviewerName = reviewerName;
+
+    product.updateRating();
+    await product.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Review updated successfully',
+      review
+    });
+  } catch (error) {
+    console.error('Update admin review error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating review'
+    });
+  }
+};
+
+// @desc    Delete admin review
+// @route   DELETE /api/products/:id/admin/reviews/:reviewId
+// @access  Private/Admin
+export const deleteAdminReview = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    const review = product.reviews.id(req.params.reviewId);
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: 'Review not found'
+      });
+    }
+
+    product.reviews.pull(req.params.reviewId);
+    product.updateRating();
+    await product.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Review deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete admin review error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while deleting review'
     });
   }
 };

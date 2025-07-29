@@ -10,7 +10,10 @@ import {
   updateProduct,
   deleteProduct,
   getLowStockProducts,
-  bulkUpdateStock
+  bulkUpdateStock,
+  addAdminReview,
+  updateAdminReview,
+  deleteAdminReview
 } from '../controllers/productController.js';
 import { protect, optionalAuth, authorize } from '../middleware/auth.js';
 import { body } from 'express-validator';
@@ -68,5 +71,20 @@ router.delete('/:id', protect, authorize('admin'), invalidateProductCache, delet
 // Admin utility routes
 router.get('/admin/low-stock', protect, authorize('admin'), getLowStockProducts);
 router.post('/admin/bulk-update-stock', protect, authorize('admin'), invalidateProductCache, bulkUpdateStock);
+
+// Admin review management routes
+router.post('/:id/admin/reviews', protect, authorize('admin'), invalidateProductCache, [
+  body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
+  body('comment').trim().notEmpty().withMessage('Review comment is required'),
+  body('reviewerName').trim().notEmpty().withMessage('Reviewer name is required')
+], addAdminReview);
+
+router.put('/:id/admin/reviews/:reviewId', protect, authorize('admin'), invalidateProductCache, [
+  body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
+  body('comment').trim().notEmpty().withMessage('Review comment is required'),
+  body('reviewerName').trim().notEmpty().withMessage('Reviewer name is required')
+], updateAdminReview);
+
+router.delete('/:id/admin/reviews/:reviewId', protect, authorize('admin'), invalidateProductCache, deleteAdminReview);
 
 export default router;

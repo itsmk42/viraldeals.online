@@ -312,16 +312,36 @@ const ProductDetail = () => {
             {activeTab === 'specifications' && (
               <div>
                 {product.specifications && product.specifications.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {product.specifications.map((spec, index) => (
-                      <div key={index} className="flex justify-between py-2 border-b border-gray-200">
-                        <span className="font-medium text-gray-900">{spec.name}</span>
-                        <span className="text-gray-700">{spec.value}</span>
-                      </div>
-                    ))}
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Specification
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Details
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {product.specifications.map((spec, index) => (
+                          <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {spec.key || spec.name}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                              {spec.value}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 ) : (
-                  <p className="text-gray-600">No specifications available.</p>
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">No specifications available for this product.</p>
+                  </div>
                 )}
               </div>
             )}

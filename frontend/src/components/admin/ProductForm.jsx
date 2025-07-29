@@ -12,6 +12,7 @@ import { productsAPI, adminAPI } from '../../services/api';
 import { useCategories, productKeys } from '../../hooks/useProducts';
 import { uploadService } from '../../services/uploadAPI';
 import toast from 'react-hot-toast';
+import ReviewsManager from './ReviewsManager';
 
 const ProductForm = ({ mode = 'create' }) => {
   const navigate = useNavigate();
@@ -61,6 +62,7 @@ const ProductForm = ({ mode = 'create' }) => {
   });
 
   const [errors, setErrors] = useState({});
+  const [productData, setProductData] = useState(null);
 
   // Load product data for edit mode
   useEffect(() => {
@@ -75,6 +77,7 @@ const ProductForm = ({ mode = 'create' }) => {
       const response = await productsAPI.getProduct(id);
       const product = response.data.product;
       
+      setProductData(product);
       setFormData({
         ...product,
         price: product.price.toString(),
@@ -94,6 +97,18 @@ const ProductForm = ({ mode = 'create' }) => {
       navigate('/admin/products');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleReviewsUpdate = async () => {
+    if (mode === 'edit' && id) {
+      // Reload product data to get updated reviews
+      try {
+        const response = await productsAPI.getProduct(id);
+        setProductData(response.data.product);
+      } catch (error) {
+        console.error('Error reloading product:', error);
+      }
     }
   };
 
@@ -904,6 +919,16 @@ const ProductForm = ({ mode = 'create' }) => {
           </div>
         </form>
       </div>
+
+      {/* Reviews Management - Only show in edit mode */}
+      {mode === 'edit' && productData && (
+        <div className="mt-8">
+          <ReviewsManager
+            product={productData}
+            onReviewsUpdate={handleReviewsUpdate}
+          />
+        </div>
+      )}
     </div>
   );
 };

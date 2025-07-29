@@ -94,6 +94,11 @@ export const adminAPI = {
   getLowStockProducts: (threshold = 10) => api.get(`/products/admin/low-stock?threshold=${threshold}`),
   bulkUpdateStock: (updates) => api.post('/products/admin/bulk-update-stock', { updates }),
 
+  // Product Reviews (Admin)
+  addAdminReview: (productId, reviewData) => api.post(`/products/${productId}/admin/reviews`, reviewData),
+  updateAdminReview: (productId, reviewId, reviewData) => api.put(`/products/${productId}/admin/reviews/${reviewId}`, reviewData),
+  deleteAdminReview: (productId, reviewId) => api.delete(`/products/${productId}/admin/reviews/${reviewId}`),
+
   // Orders
   getAllOrders: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
