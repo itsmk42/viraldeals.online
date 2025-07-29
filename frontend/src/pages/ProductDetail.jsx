@@ -362,7 +362,7 @@ const ProductDetail = () => {
                             {renderStars(review.rating)}
                           </div>
                           <span className="font-medium text-gray-900">
-                            {review.user?.name || 'Anonymous'}
+                            {review.reviewerName || review.user?.name || 'Anonymous'}
                           </span>
                           <span className="text-sm text-gray-500">
                             {new Date(review.createdAt).toLocaleDateString()}

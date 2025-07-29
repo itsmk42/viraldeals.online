@@ -309,18 +309,24 @@ const ProductForm = ({ mode = 'create' }) => {
         weight: formData.weight ? parseFloat(formData.weight) : null,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
         features: formData.features.filter(feature => feature.trim()),
-        specifications: formData.specifications.filter(spec => spec.key.trim() && spec.value.trim()),
+        specifications: formData.specifications.filter(spec =>
+          spec && spec.key && spec.value && spec.key.trim() && spec.value.trim()
+        ),
         gst: {
           ...formData.gst,
           rate: parseFloat(formData.gst.rate)
         }
       };
 
+      console.log('Submitting product data:', productData);
+
       let response;
       if (mode === 'edit') {
+        console.log('Updating product with ID:', id);
         response = await adminAPI.updateProduct(id, productData);
         toast.success('Product updated successfully');
       } else {
+        console.log('Creating new product');
         response = await adminAPI.createProduct(productData);
         toast.success('Product created successfully');
       }
@@ -337,7 +343,9 @@ const ProductForm = ({ mode = 'create' }) => {
       navigate('/admin/products');
     } catch (error) {
       console.error('Error saving product:', error);
-      toast.error(error.response?.data?.message || 'Failed to save product');
+      console.error('Error details:', error.response?.data);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to save product';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
