@@ -90,22 +90,6 @@ const productSchema = new mongoose.Schema({
       default: Date.now
     }
   }],
-  features: [{
-    type: String,
-    maxLength: 200
-  }],
-  specifications: [{
-    key: {
-      type: String,
-      required: true,
-      maxLength: 100
-    },
-    value: {
-      type: String,
-      required: true,
-      maxLength: 200
-    }
-  }],
   tags: [{
     type: String,
     maxLength: 50

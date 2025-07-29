@@ -57,6 +57,36 @@ const ProductDetail = () => {
     }
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: product.name,
+      text: `Check out this amazing product: ${product.name}`,
+      url: window.location.href
+    };
+
+    try {
+      // Check if Web Share API is supported
+      if (navigator.share) {
+        await navigator.share(shareData);
+        toast.success('Product shared successfully!');
+      } else {
+        // Fallback: Copy URL to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success('Product URL copied to clipboard!');
+      }
+    } catch (error) {
+      // If clipboard API fails, show URL in a prompt
+      if (error.name !== 'AbortError') {
+        const url = window.location.href;
+        if (window.prompt) {
+          window.prompt('Copy this URL to share:', url);
+        } else {
+          toast.error('Unable to share. Please copy the URL manually.');
+        }
+      }
+    }
+  };
+
   const renderStars = (rating) => {
     const stars = [];
     const fullStars = Math.floor(rating);
@@ -245,7 +275,11 @@ const ProductDetail = () => {
                 <HeartIcon className="h-6 w-6 text-gray-600" />
               </button>
 
-              <button className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <button
+                onClick={handleShare}
+                className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                title="Share this product"
+              >
                 <ShareIcon className="h-6 w-6 text-gray-600" />
               </button>
             </div>
@@ -274,7 +308,6 @@ const ProductDetail = () => {
             <nav className="flex space-x-8 px-6">
               {[
                 { id: 'description', label: 'Description' },
-                { id: 'specifications', label: 'Specifications' },
                 { id: 'reviews', label: `Reviews (${product.rating?.count || 0})` }
               ].map((tab) => (
                 <button
@@ -296,55 +329,10 @@ const ProductDetail = () => {
             {activeTab === 'description' && (
               <div className="prose max-w-none">
                 <p className="text-gray-700 leading-relaxed">{product.description}</p>
-                {product.features && product.features.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Key Features</h3>
-                    <ul className="list-disc list-inside space-y-2">
-                      {product.features.map((feature, index) => (
-                        <li key={index} className="text-gray-700">{feature}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </div>
             )}
 
-            {activeTab === 'specifications' && (
-              <div>
-                {product.specifications && product.specifications.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Specification
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Details
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {product.specifications.map((spec, index) => (
-                          <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {spec.key || spec.name}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                              {spec.value}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">No specifications available for this product.</p>
-                  </div>
-                )}
-              </div>
-            )}
+
 
             {activeTab === 'reviews' && (
               <div>

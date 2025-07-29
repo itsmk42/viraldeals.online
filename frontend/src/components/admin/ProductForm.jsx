@@ -13,7 +13,6 @@ import { useCategories, productKeys } from '../../hooks/useProducts';
 import { uploadService } from '../../services/uploadAPI';
 import toast from 'react-hot-toast';
 import ReviewsManager from './ReviewsManager';
-import FeaturesManager from './FeaturesManager';
 
 const ProductForm = ({ mode = 'create' }) => {
   const navigate = useNavigate();
@@ -50,8 +49,6 @@ const ProductForm = ({ mode = 'create' }) => {
       included: false
     },
     images: [],
-    features: [''],
-    specifications: [{ key: '', value: '' }],
     tags: '',
     isActive: true,
     isFeatured: false,
@@ -87,8 +84,6 @@ const ProductForm = ({ mode = 'create' }) => {
         weight: product.weight?.toString() || '',
         dimensions: product.dimensions || { length: '', width: '', height: '' },
         gst: product.gst || { rate: '18', hsn: '', included: false },
-        features: product.features?.length ? product.features : [''],
-        specifications: product.specifications?.length ? product.specifications : [{ key: '', value: '' }],
         tags: product.tags?.join(', ') || '',
         seo: product.seo || { title: '', description: '', keywords: '' }
       });
@@ -230,49 +225,9 @@ const ProductForm = ({ mode = 'create' }) => {
     }));
   };
 
-  const addFeature = () => {
-    setFormData(prev => ({
-      ...prev,
-      features: [...prev.features, '']
-    }));
-  };
 
-  const updateFeature = (index, value) => {
-    setFormData(prev => ({
-      ...prev,
-      features: prev.features.map((feature, i) => i === index ? value : feature)
-    }));
-  };
 
-  const removeFeature = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      features: prev.features.filter((_, i) => i !== index)
-    }));
-  };
 
-  const addSpecification = () => {
-    setFormData(prev => ({
-      ...prev,
-      specifications: [...prev.specifications, { key: '', value: '' }]
-    }));
-  };
-
-  const updateSpecification = (index, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      specifications: prev.specifications.map((spec, i) => 
-        i === index ? { ...spec, [field]: value } : spec
-      )
-    }));
-  };
-
-  const removeSpecification = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      specifications: prev.specifications.filter((_, i) => i !== index)
-    }));
-  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -308,10 +263,6 @@ const ProductForm = ({ mode = 'create' }) => {
         stock: parseInt(formData.stock),
         weight: formData.weight ? parseFloat(formData.weight) : null,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        features: formData.features.filter(feature => feature.trim()),
-        specifications: formData.specifications.filter(spec =>
-          spec && spec.key && spec.value && spec.key.trim() && spec.value.trim()
-        ),
         gst: {
           ...formData.gst,
           rate: parseFloat(formData.gst.rate)
@@ -679,82 +630,9 @@ const ProductForm = ({ mode = 'create' }) => {
             {errors.images && <p className="text-red-500 text-sm mt-1">{errors.images}</p>}
           </div>
 
-          {/* Product Features */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Product Features
-            </label>
-            <div className="space-y-2">
-              {formData.features.map((feature, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={feature}
-                    onChange={(e) => updateFeature(index, e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="Enter product feature"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeFeature(index)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <XMarkIcon className="h-5 w-5" />
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={addFeature}
-                className="flex items-center text-primary-600 hover:text-primary-700"
-              >
-                <PlusIcon className="h-4 w-4 mr-1" />
-                Add Feature
-              </button>
-            </div>
-          </div>
 
-          {/* Product Specifications */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Product Specifications
-            </label>
-            <div className="space-y-2">
-              {formData.specifications.map((spec, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={spec.key}
-                    onChange={(e) => updateSpecification(index, 'key', e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="Specification name"
-                  />
-                  <input
-                    type="text"
-                    value={spec.value}
-                    onChange={(e) => updateSpecification(index, 'value', e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="Specification value"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeSpecification(index)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <XMarkIcon className="h-5 w-5" />
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={addSpecification}
-                className="flex items-center text-primary-600 hover:text-primary-700"
-              >
-                <PlusIcon className="h-4 w-4 mr-1" />
-                Add Specification
-              </button>
-            </div>
-          </div>
+
+
 
           {/* Physical Properties */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -929,15 +807,7 @@ const ProductForm = ({ mode = 'create' }) => {
         </form>
       </div>
 
-      {/* Features Management - Only show in edit mode */}
-      {mode === 'edit' && productData && (
-        <div className="mt-8">
-          <FeaturesManager
-            product={productData}
-            onFeaturesUpdate={handleReviewsUpdate}
-          />
-        </div>
-      )}
+
 
       {/* Reviews Management - Only show in edit mode */}
       {mode === 'edit' && productData && (
