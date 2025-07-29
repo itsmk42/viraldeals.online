@@ -526,7 +526,7 @@ export const addAdminReview = async (req, res) => {
       });
     }
 
-    const { rating, comment, reviewerName } = req.body;
+    const { rating, comment, reviewerName, createdAt } = req.body;
     const product = await Product.findById(req.params.id);
 
     if (!product) {
@@ -540,9 +540,13 @@ export const addAdminReview = async (req, res) => {
       user: req.user._id,
       rating: Number(rating),
       comment,
-      reviewerName,
-      createdAt: new Date()
+      reviewerName
     };
+
+    // Only set createdAt if provided from frontend
+    if (createdAt) {
+      review.createdAt = new Date(createdAt);
+    }
 
     product.reviews.push(review);
     product.updateRating();
@@ -576,7 +580,7 @@ export const updateAdminReview = async (req, res) => {
       });
     }
 
-    const { rating, comment, reviewerName } = req.body;
+    const { rating, comment, reviewerName, createdAt } = req.body;
     const product = await Product.findById(req.params.id);
 
     if (!product) {
@@ -597,6 +601,11 @@ export const updateAdminReview = async (req, res) => {
     review.rating = Number(rating);
     review.comment = comment;
     review.reviewerName = reviewerName;
+
+    // Update createdAt if provided
+    if (createdAt) {
+      review.createdAt = new Date(createdAt);
+    }
 
     product.updateRating();
     await product.save();

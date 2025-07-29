@@ -13,6 +13,7 @@ import { useCategories, productKeys } from '../../hooks/useProducts';
 import { uploadService } from '../../services/uploadAPI';
 import toast from 'react-hot-toast';
 import ReviewsManager from './ReviewsManager';
+import FeaturesManager from './FeaturesManager';
 
 const ProductForm = ({ mode = 'create' }) => {
   const navigate = useNavigate();
@@ -919,6 +920,16 @@ const ProductForm = ({ mode = 'create' }) => {
           </div>
         </form>
       </div>
+
+      {/* Features Management - Only show in edit mode */}
+      {mode === 'edit' && productData && (
+        <div className="mt-8">
+          <FeaturesManager
+            product={productData}
+            onFeaturesUpdate={handleReviewsUpdate}
+          />
+        </div>
+      )}
 
       {/* Reviews Management - Only show in edit mode */}
       {mode === 'edit' && productData && (
