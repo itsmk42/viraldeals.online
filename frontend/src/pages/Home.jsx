@@ -17,10 +17,75 @@ const Home = () => {
   } = useFeaturedProducts(6);
 
   const {
-    data: categories = [],
+    data: dbCategories = [],
     isLoading: categoriesLoading,
     error: categoriesError
   } = useCategories();
+
+  // Special categories with custom filtering and icons
+  const specialCategories = [
+    {
+      name: 'Hot Products',
+      count: '50+',
+      icon: '🔥',
+      gradient: 'from-red-500 to-orange-500',
+      link: '/products?sort=trending&featured=true',
+      description: 'Trending and popular items'
+    },
+    {
+      name: 'New Releases',
+      count: '25+',
+      icon: '✨',
+      gradient: 'from-blue-500 to-cyan-500',
+      link: '/products?sort=newest',
+      description: 'Latest arrivals and new products'
+    },
+    {
+      name: 'Customer Favorites',
+      count: '30+',
+      icon: '❤️',
+      gradient: 'from-pink-500 to-rose-500',
+      link: '/products?sort=rating&minRating=4',
+      description: 'Top-rated and most-loved products'
+    },
+    {
+      name: 'Flash Deals',
+      count: '15+',
+      icon: '⚡',
+      gradient: 'from-yellow-500 to-amber-500',
+      link: '/products?discount=true&sort=discount',
+      description: 'Limited-time offers and discounts'
+    },
+    {
+      name: 'Best Sellers',
+      count: '40+',
+      icon: '🏆',
+      gradient: 'from-purple-500 to-indigo-500',
+      link: '/products?sort=popularity',
+      description: 'Most purchased and popular products'
+    },
+    {
+      name: "Editor's Choice",
+      count: '20+',
+      icon: '👑',
+      gradient: 'from-emerald-500 to-teal-500',
+      link: '/products?featured=true&sort=rating',
+      description: 'Curated selection of recommended products'
+    }
+  ];
+
+  // Combine special categories with database categories
+  const allCategories = [
+    ...specialCategories,
+    ...dbCategories.map(cat => ({
+      name: cat.name,
+      count: `${cat.count}`,
+      icon: cat.name.charAt(0),
+      gradient: 'from-indigo-500 to-purple-600',
+      link: `/products?category=${encodeURIComponent(cat.name)}`,
+      description: `${cat.count} products available`
+    }))
+  ];
 
   const loading = featuredLoading || categoriesLoading;
 
@@ -136,41 +201,52 @@ const Home = () => {
               </span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Discover exactly what you're looking for in our carefully organized product categories
+              Discover exactly what you're looking for in our carefully organized product categories and special collections
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {categories.map((category, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {allCategories.map((category, index) => (
               <Link
                 key={category.name}
-                to={`/products?category=${encodeURIComponent(category.name)}`}
-                className="group relative bg-gradient-to-br from-white to-gray-50 rounded-3xl p-8 hover:shadow-2xl transition-all duration-500 border border-gray-100 card-hover"
+                to={category.link}
+                className="group relative bg-gradient-to-br from-white to-gray-50 rounded-3xl p-6 hover:shadow-2xl transition-all duration-500 border border-gray-100 card-hover"
               >
                 {/* Category Icon */}
-                <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-2xl text-white font-bold">
-                    {category.name.charAt(0)}
-                  </span>
+                <div className={`w-16 h-16 bg-gradient-to-br ${category.gradient} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                  {typeof category.icon === 'string' && category.icon.length === 1 && /\p{L}/u.test(category.icon) ? (
+                    <span className="text-2xl text-white font-bold">
+                      {category.icon}
+                    </span>
+                  ) : (
+                    <span className="text-2xl">
+                      {category.icon}
+                    </span>
+                  )}
                 </div>
 
                 <div className="space-y-3">
-                  <h3 className="text-2xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors duration-300">
+                  <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors duration-300 line-clamp-2">
                     {category.name}
                   </h3>
-                  <p className="text-gray-600 font-medium">
-                    {category.count} products available
+                  <p className="text-gray-600 font-medium text-sm">
+                    {category.description}
                   </p>
 
+                  {/* Product count badge */}
+                  <div className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">
+                    {category.count} products
+                  </div>
+
                   {/* Arrow indicator */}
-                  <div className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-2 transition-transform duration-300">
+                  <div className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-2 transition-transform duration-300 pt-2">
                     <span className="text-sm">Explore now</span>
                     <ArrowRightIcon className="ml-2 h-4 w-4" />
                   </div>
                 </div>
 
                 {/* Hover effect overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className={`absolute inset-0 bg-gradient-to-br ${category.gradient.replace('from-', 'from-').replace('to-', 'to-')}/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
               </Link>
             ))}
           </div>

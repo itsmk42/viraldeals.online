@@ -369,6 +369,58 @@
     /* This can be expanded later if dark mode is implemented */
   }
 
+  /* Enhanced category grid responsive design */
+  @media (min-width: 1280px) {
+    .category-grid-xl {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    .category-grid-lg {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .category-grid-md {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 767px) {
+    .category-grid-sm {
+      grid-template-columns: repeat(1, 1fr);
+    }
+  }
+
+  /* Category card enhancements */
+  .category-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .category-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Special category icon animations */
+  .category-icon {
+    transition: all 0.3s ease;
+  }
+
+  .category-card:hover .category-icon {
+    transform: scale(1.1) rotate(5deg);
+  }
+
+  /* Line clamp utility for category descriptions */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
   /* Image container with proper background */
   .img-container {
     position: relative;
