@@ -29,7 +29,7 @@ const Home = () => {
       count: '50+',
       icon: '🔥',
       gradient: 'from-red-500 to-orange-500',
-      link: '/products?sort=trending&featured=true',
+      link: '/products?specialCategory=hot-products',
       description: 'Trending and popular items'
     },
     {
@@ -37,7 +37,7 @@ const Home = () => {
       count: '25+',
       icon: '✨',
       gradient: 'from-blue-500 to-cyan-500',
-      link: '/products?sort=newest',
+      link: '/products?specialCategory=new-releases',
       description: 'Latest arrivals and new products'
     },
     {
@@ -45,7 +45,7 @@ const Home = () => {
       count: '30+',
       icon: '❤️',
       gradient: 'from-pink-500 to-rose-500',
-      link: '/products?sort=rating&minRating=4',
+      link: '/products?specialCategory=customer-favorites',
       description: 'Top-rated and most-loved products'
     },
     {
@@ -53,7 +53,7 @@ const Home = () => {
       count: '15+',
       icon: '⚡',
       gradient: 'from-yellow-500 to-amber-500',
-      link: '/products?discount=true&sort=discount',
+      link: '/products?specialCategory=flash-deals',
       description: 'Limited-time offers and discounts'
     },
     {
@@ -61,7 +61,7 @@ const Home = () => {
       count: '40+',
       icon: '🏆',
       gradient: 'from-purple-500 to-indigo-500',
-      link: '/products?sort=popularity',
+      link: '/products?specialCategory=best-sellers',
       description: 'Most purchased and popular products'
     },
     {
@@ -69,7 +69,7 @@ const Home = () => {
       count: '20+',
       icon: '👑',
       gradient: 'from-emerald-500 to-teal-500',
-      link: '/products?featured=true&sort=rating',
+      link: '/products?specialCategory=editors-choice',
       description: 'Curated selection of recommended products'
     }
   ];

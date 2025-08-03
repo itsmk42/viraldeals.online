@@ -79,6 +79,18 @@ export const useCategories = () => {
   });
 };
 
+// Get special category products
+export const useSpecialCategoryProducts = (specialCategory, filters = {}) => {
+  return useQuery({
+    queryKey: [...productKeys.list(filters), 'special', specialCategory],
+    queryFn: () => productsAPI.getProducts({ ...filters, specialCategory }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+    enabled: !!specialCategory,
+    select: (data) => data.data,
+  });
+};
+
 // Get product reviews
 export const useProductReviews = (productId, params = {}) => {
   return useQuery({

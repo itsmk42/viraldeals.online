@@ -40,7 +40,17 @@ export const getProducts = async (req, res) => {
       filter['rating.average'] = { $gte: parseFloat(req.query.minRating) };
     }
 
-    // Build sort object
+    // Featured filter
+    if (req.query.featured === 'true') {
+      filter.isFeatured = true;
+    }
+
+    // Discount filter
+    if (req.query.discount === 'true') {
+      filter.discount = { $gt: 0 };
+    }
+
+    // Build sort object with special category support
     let sort = {};
     switch (req.query.sort) {
       case 'price_low':
@@ -58,20 +68,42 @@ export const getProducts = async (req, res) => {
       case 'name':
         sort = { name: 1 };
         break;
+      case 'trending':
+        // Sort by combination of rating, reviews count, and recent activity
+        sort = { 'rating.count': -1, 'rating.average': -1, createdAt: -1 };
+        break;
+      case 'popularity':
+        // Sort by rating count (proxy for sales/popularity)
+        sort = { 'rating.count': -1, 'rating.average': -1 };
+        break;
+      case 'discount':
+        // Sort by discount percentage (highest first)
+        sort = { discount: -1, price: 1 };
+        break;
       default:
         sort = { createdAt: -1 };
     }
 
-    // Execute query with optimized projection
-    const products = await Product.find(filter)
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .select('name price originalPrice images rating stock category brand discount isFeatured seo createdAt')
-      .lean();
+    // Handle special categories with aggregation pipeline for better performance
+    let products;
+    let total;
 
-    // Get total count for pagination
-    const total = await Product.countDocuments(filter);
+    if (req.query.specialCategory) {
+      const result = await getSpecialCategoryProducts(req.query.specialCategory, filter, sort, skip, limit);
+      products = result.products;
+      total = result.total;
+    } else {
+      // Execute standard query with optimized projection
+      products = await Product.find(filter)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .select('name price originalPrice images rating stock category brand discount isFeatured seo createdAt')
+        .lean();
+
+      // Get total count for pagination
+      total = await Product.countDocuments(filter);
+    }
 
     res.status(200).json({
       success: true,
@@ -88,6 +120,131 @@ export const getProducts = async (req, res) => {
       message: 'Server error while fetching products'
     });
   }
+};
+
+// Helper function to handle special category filtering
+const getSpecialCategoryProducts = async (specialCategory, baseFilter, baseSort, skip, limit) => {
+  let aggregationPipeline = [];
+
+  // Start with base filter
+  aggregationPipeline.push({ $match: baseFilter });
+
+  switch (specialCategory) {
+    case 'hot-products':
+      // Hot Products: Featured products with high ratings and recent activity
+      aggregationPipeline.push({
+        $match: {
+          isFeatured: true,
+          'rating.average': { $gte: 4.0 },
+          'rating.count': { $gte: 5 }
+        }
+      });
+      aggregationPipeline.push({
+        $sort: { 'rating.count': -1, 'rating.average': -1, createdAt: -1 }
+      });
+      break;
+
+    case 'new-releases':
+      // New Releases: Products created in the last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      aggregationPipeline.push({
+        $match: {
+          createdAt: { $gte: thirtyDaysAgo }
+        }
+      });
+      aggregationPipeline.push({
+        $sort: { createdAt: -1 }
+      });
+      break;
+
+    case 'customer-favorites':
+      // Customer Favorites: High-rated products with 4+ stars and multiple reviews
+      aggregationPipeline.push({
+        $match: {
+          'rating.average': { $gte: 4.0 },
+          'rating.count': { $gte: 10 }
+        }
+      });
+      aggregationPipeline.push({
+        $sort: { 'rating.average': -1, 'rating.count': -1 }
+      });
+      break;
+
+    case 'flash-deals':
+      // Flash Deals: Products with discounts
+      aggregationPipeline.push({
+        $match: {
+          discount: { $gt: 0 }
+        }
+      });
+      aggregationPipeline.push({
+        $sort: { discount: -1, price: 1 }
+      });
+      break;
+
+    case 'best-sellers':
+      // Best Sellers: Products with high review counts (proxy for sales)
+      aggregationPipeline.push({
+        $match: {
+          'rating.count': { $gte: 15 }
+        }
+      });
+      aggregationPipeline.push({
+        $sort: { 'rating.count': -1, 'rating.average': -1 }
+      });
+      break;
+
+    case 'editors-choice':
+      // Editor's Choice: Featured products with excellent ratings
+      aggregationPipeline.push({
+        $match: {
+          isFeatured: true,
+          'rating.average': { $gte: 4.5 }
+        }
+      });
+      aggregationPipeline.push({
+        $sort: { 'rating.average': -1, 'rating.count': -1, createdAt: -1 }
+      });
+      break;
+
+    default:
+      // Fallback to base sort
+      aggregationPipeline.push({ $sort: baseSort });
+  }
+
+  // Add projection for optimized fields
+  aggregationPipeline.push({
+    $project: {
+      name: 1,
+      price: 1,
+      originalPrice: 1,
+      images: 1,
+      rating: 1,
+      stock: 1,
+      category: 1,
+      brand: 1,
+      discount: 1,
+      isFeatured: 1,
+      seo: 1,
+      createdAt: 1
+    }
+  });
+
+  // Add pagination
+  const countPipeline = [...aggregationPipeline, { $count: "total" }];
+  aggregationPipeline.push({ $skip: skip });
+  aggregationPipeline.push({ $limit: limit });
+
+  // Execute both queries
+  const [products, countResult] = await Promise.all([
+    Product.aggregate(aggregationPipeline),
+    Product.aggregate(countPipeline)
+  ]);
+
+  const total = countResult.length > 0 ? countResult[0].total : 0;
+
+  return { products, total };
 };
 
 // @desc    Get single product

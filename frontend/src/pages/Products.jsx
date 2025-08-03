@@ -23,6 +23,10 @@ const Products = () => {
     maxPrice: searchParams.get('maxPrice') || '',
     brand: searchParams.get('brand') || '',
     sort: searchParams.get('sort') || 'newest',
+    specialCategory: searchParams.get('specialCategory') || '',
+    featured: searchParams.get('featured') || '',
+    discount: searchParams.get('discount') || '',
+    minRating: searchParams.get('minRating') || '',
     page: parseInt(searchParams.get('page')) || 1,
     limit: 12
   };
@@ -48,6 +52,31 @@ const Products = () => {
   };
 
   const loading = productsLoading;
+
+  // Get page title based on filters
+  const getPageTitle = () => {
+    if (filters.search) {
+      return `Search results for "${filters.search}"`;
+    }
+
+    if (filters.specialCategory) {
+      const specialCategoryNames = {
+        'hot-products': 'Hot Products 🔥',
+        'new-releases': 'New Releases ✨',
+        'customer-favorites': 'Customer Favorites ❤️',
+        'flash-deals': 'Flash Deals ⚡',
+        'best-sellers': 'Best Sellers 🏆',
+        'editors-choice': "Editor's Choice 👑"
+      };
+      return specialCategoryNames[filters.specialCategory] || 'Special Category';
+    }
+
+    if (filters.category) {
+      return filters.category;
+    }
+
+    return 'All Products';
+  };
 
   const updateFilters = (newFilters) => {
     const params = new URLSearchParams();
@@ -81,8 +110,7 @@ const Products = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              {filters.search ? `Search results for "${filters.search}"` :
-               filters.category ? filters.category : 'All Products'}
+              {getPageTitle()}
             </h1>
             <p className="text-gray-600 mt-2">
               {pagination.total} products found

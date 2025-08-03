@@ -421,6 +421,102 @@
     overflow: hidden;
   }
 
+  /* Enhanced header styles */
+  .header-backdrop {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Header logo glow animation */
+  @keyframes logo-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+    }
+  }
+
+  .logo-glow:hover {
+    animation: logo-glow 2s ease-in-out infinite;
+  }
+
+  /* Search bar focus glow */
+  .search-glow:focus-within {
+    box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.3), 0 0 20px rgba(99, 102, 241, 0.2);
+  }
+
+  /* Navigation link hover effects */
+  .nav-link {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .nav-link::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+  }
+
+  .nav-link:hover::before {
+    width: 100%;
+  }
+
+  /* Mobile menu slide animation */
+  .mobile-menu-enter {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  .mobile-menu-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.3s ease;
+  }
+
+  /* Cart badge pulse animation */
+  @keyframes cart-pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+  }
+
+  .cart-badge {
+    animation: cart-pulse 2s ease-in-out infinite;
+  }
+
+  /* Dropdown menu animations */
+  .dropdown-enter {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+
+  .dropdown-enter-active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition: all 0.2s ease;
+  }
+
+  /* Header height adjustment */
+  .header-enhanced {
+    height: 72px; /* Increased from default 64px */
+  }
+
+  @media (max-width: 768px) {
+    .header-enhanced {
+      height: 64px; /* Standard height on mobile */
+    }
+  }
+
   /* Image container with proper background */
   .img-container {
     position: relative;
