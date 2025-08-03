@@ -554,4 +554,45 @@
     background-image: radial-gradient(circle at 1px 1px, #e5e7eb 1px, transparent 0);
     background-size: 20px 20px;
   }
+
+  /* Mobile search modal animations */
+  @keyframes slideInFromTop {
+    from {
+      opacity: 0;
+      transform: translateY(-100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInBackdrop {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .mobile-search-modal {
+    animation: slideInFromTop 0.3s ease-out;
+  }
+
+  .mobile-search-backdrop {
+    animation: fadeInBackdrop 0.3s ease-out;
+  }
+
+  /* Mobile search input focus effects */
+  .mobile-search-input:focus {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+  }
+
+  /* Mobile search icon hover effect */
+  .mobile-search-icon:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+  }
 }

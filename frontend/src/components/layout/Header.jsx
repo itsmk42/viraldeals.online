@@ -12,6 +12,7 @@ import { useCart } from '../../context/CartContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { isAuthenticated, user, logout } = useAuth();
   const { itemCount, toggleCart } = useCart();
@@ -190,6 +191,14 @@ const Header = () => {
 
           {/* Enhanced Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-2">
+            {/* Mobile Search Icon */}
+            <button
+              onClick={() => setIsMobileSearchOpen(true)}
+              className="p-3 text-gray-700 hover:text-indigo-600 transition-all duration-300 rounded-xl hover:bg-indigo-50 group mobile-search-icon"
+            >
+              <MagnifyingGlassIcon className="h-6 w-6 group-hover:scale-110 transition-transform duration-300" />
+            </button>
+
             <button
               onClick={toggleCart}
               className="relative p-3 text-gray-700 hover:text-indigo-600 transition-all duration-300 rounded-xl hover:bg-indigo-50"
@@ -215,30 +224,7 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Enhanced Mobile Search Bar */}
-        <div className="md:hidden pb-4">
-          <form onSubmit={handleSearch}>
-            <div className="relative group">
-              <input
-                type="text"
-                placeholder="Search for amazing products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-12 py-3 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-300 transition-all duration-300 shadow-sm hover:shadow-md focus:shadow-lg placeholder-gray-400 text-gray-700"
-              />
-              <MagnifyingGlassIcon className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors duration-300" />
 
-              {/* Mobile search button */}
-              <button
-                type="submit"
-                className="absolute right-2 top-2 p-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-sm hover:shadow-md disabled:opacity-50"
-                disabled={!searchQuery.trim()}
-              >
-                <MagnifyingGlassIcon className="h-4 w-4" />
-              </button>
-            </div>
-          </form>
-        </div>
 
         {/* Enhanced Mobile Menu */}
         {isMenuOpen && (
@@ -321,6 +307,68 @@ const Header = () => {
                 </>
               )}
             </nav>
+          </div>
+        )}
+
+        {/* Mobile Search Modal */}
+        {isMobileSearchOpen && (
+          <div className="fixed inset-0 z-50 md:hidden">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm mobile-search-backdrop"
+              onClick={() => setIsMobileSearchOpen(false)}
+            />
+
+            {/* Modal Content */}
+            <div className="relative z-10 bg-white shadow-2xl mobile-search-modal">
+              <div className="px-4 py-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Search Products</h3>
+                  <button
+                    onClick={() => setIsMobileSearchOpen(false)}
+                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
+                </div>
+
+                <form onSubmit={(e) => {
+                  handleSearch(e);
+                  setIsMobileSearchOpen(false);
+                }}>
+                  <div className="relative group">
+                    <input
+                      type="text"
+                      placeholder="Search for amazing products..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-300 focus:bg-white transition-all duration-300 shadow-sm hover:shadow-md focus:shadow-lg placeholder-gray-400 text-gray-700 text-lg mobile-search-input"
+                      autoFocus
+                    />
+                    <MagnifyingGlassIcon className="absolute left-4 top-4.5 h-6 w-6 text-gray-400 group-focus-within:text-indigo-500 transition-colors duration-300" />
+
+                    {/* Search button */}
+                    <button
+                      type="submit"
+                      className="absolute right-2 top-2 p-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-sm hover:shadow-md disabled:opacity-50"
+                      disabled={!searchQuery.trim()}
+                    >
+                      <MagnifyingGlassIcon className="h-5 w-5" />
+                    </button>
+
+                    {/* Gradient border effect */}
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 -z-10 blur-sm"></div>
+                  </div>
+                </form>
+
+                {/* Quick search suggestions or recent searches could go here */}
+                <div className="mt-6">
+                  <p className="text-sm text-gray-500 text-center">
+                    Start typing to search for products...
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
