@@ -751,4 +751,38 @@
     background-size: 200px 100%;
     animation: skeleton-loading 1.5s infinite;
   }
+
+  /* Z-index utilities for proper layering */
+  .z-5 {
+    z-index: 5;
+  }
+
+  .z-15 {
+    z-index: 15;
+  }
+
+  .z-25 {
+    z-index: 25;
+  }
+
+  /* Enhanced category card hover effects */
+  .category-card-content {
+    position: relative;
+    z-index: 20;
+  }
+
+  .category-card-overlay {
+    position: absolute;
+    z-index: 10;
+  }
+
+  .category-card-border {
+    position: absolute;
+    z-index: 5;
+  }
+
+  .category-card-glow {
+    position: absolute;
+    z-index: -10;
+  }
 }

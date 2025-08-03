@@ -349,28 +349,28 @@ const Home = () => {
               <Link
                 key={category.name}
                 to={category.link}
-                className="group relative bg-gradient-to-br from-white via-gray-50/50 to-white rounded-3xl p-8 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-700 border border-gray-200/50 hover:border-indigo-200 card-hover transform hover:scale-105 hover:-translate-y-2"
+                className="group relative bg-gradient-to-br from-white via-gray-50/50 to-white rounded-3xl p-6 sm:p-8 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-700 border border-gray-200/50 hover:border-indigo-200 card-hover transform hover:scale-105 hover:-translate-y-2 overflow-hidden"
                 style={{
                   animationDelay: `${index * 100}ms`,
                   animation: isVisible ? 'fadeInUp 0.6s ease-out forwards' : 'none'
                 }}
               >
                 {/* Enhanced Category Icon */}
-                <div className="relative mb-8">
-                  <div className={`w-20 h-20 bg-gradient-to-br ${category.gradient} rounded-3xl flex items-center justify-center group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 shadow-xl group-hover:shadow-2xl`}>
+                <div className="relative mb-6 sm:mb-8 z-20">
+                  <div className={`w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br ${category.gradient} rounded-2xl sm:rounded-3xl flex items-center justify-center group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 shadow-xl group-hover:shadow-2xl`}>
                     {typeof category.icon === 'string' && category.icon.length === 1 && /\p{L}/u.test(category.icon) ? (
-                      <span className="text-3xl text-white font-bold group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-2xl sm:text-3xl text-white font-bold group-hover:scale-110 transition-transform duration-300">
                         {category.icon}
                       </span>
                     ) : (
-                      <span className="text-3xl group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-300">
                         {category.icon}
                       </span>
                     )}
                   </div>
 
                   {/* Glow effect */}
-                  <div className={`absolute inset-0 w-20 h-20 bg-gradient-to-br ${category.gradient} rounded-3xl opacity-0 group-hover:opacity-30 transition-opacity duration-500 blur-xl -z-10`}></div>
+                  <div className={`absolute inset-0 w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br ${category.gradient} rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-30 transition-opacity duration-500 blur-xl -z-10`}></div>
 
                   {/* Floating sparkles */}
                   <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
@@ -378,12 +378,12 @@ const Home = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h3 className="text-2xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors duration-500 line-clamp-2 leading-tight">
+                <div className="space-y-3 sm:space-y-4 relative z-20">
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors duration-500 line-clamp-2 leading-tight">
                     {category.name}
                   </h3>
 
-                  <p className="text-gray-600 font-medium text-base leading-relaxed line-clamp-2">
+                  <p className="text-sm sm:text-base text-gray-600 font-medium leading-relaxed line-clamp-2">
                     {category.description}
                   </p>
 
@@ -408,15 +408,18 @@ const Home = () => {
                   </div>
                 </div>
 
-                {/* Enhanced Hover effect overlay */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${category.gradient.replace('from-', 'from-').replace('to-', 'to-')}/8 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+                {/* Enhanced Hover effect overlay - positioned behind content */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${category.gradient.replace('from-', 'from-').replace('to-', 'to-')}/8 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10`}></div>
 
-                {/* Animated border */}
-                <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                {/* Animated border - positioned behind content */}
+                <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-5">
                   <div className={`absolute inset-0 rounded-3xl bg-gradient-to-r ${category.gradient} p-[2px]`}>
-                    <div className="w-full h-full bg-white rounded-3xl"></div>
+                    <div className="w-full h-full bg-transparent rounded-3xl"></div>
                   </div>
                 </div>
+
+                {/* Subtle glow effect behind card */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${category.gradient} rounded-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl -z-10 scale-110`}></div>
               </Link>
             ))}
           </div>
